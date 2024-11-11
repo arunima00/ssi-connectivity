@@ -1,3 +1,5 @@
+rm(list=ls()) ##clear env
+
 library(terra)
 
 zones<-rast("GIS/Climate zones/ClassifiedSumSWGPrecandTas.tif")
