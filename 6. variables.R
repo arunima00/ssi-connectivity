@@ -150,14 +150,14 @@ for (region in c("nil1400","pahw1400")){
   
   # Create and save raster stacks for grassland species variables
   if (region == "nil1400"){
-    predictors_present_g <- c(lc_2017_clip,
+    predictors_present_g <- c(prox_clip[[c(2,4)]],
+                              lc_2017_clip,
                               topo_clip,
-                              prox_clip[[c(2,4)]],
                               clim_zone_clip)
     
-    predictors_past_g <- c(lc_1995_clip,
+    predictors_past_g <- c(prox_clip[[c(1,3)]],
+                           lc_1995_clip,
                            topo_clip,
-                           prox_clip[[c(1,3)]],
                            clim_zone_clip)
     
     writeRaster(predictors_present_g,
