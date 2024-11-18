@@ -44,10 +44,11 @@ for (spec in c("SHAL","SHMA","MOFA","MOCA","ANNI")){
   # Load CSV file with occupancy data
   occ <- read.csv(paste0(proj_path,"occupancy data/Jobin/Filtered/",spec,".csv"))
   
+  # Extract presence and absence locations
   p_coords <- filter(occ,Presence == 1)[,c(1,2)]
   a_coords <- filter(occ,Presence == 0)[,c(1,2)]
   
-  # Combine all input data
+  # Combine all input data and extract predictor variables for all locations
   data <- prepareSWD(species = spec,
                      p = p_coords,
                      a = a_coords,
