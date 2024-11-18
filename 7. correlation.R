@@ -58,7 +58,7 @@ all_vars # view all variables
 df_th # view correlated variables
 
 # Remove variables with correlation > 0.7 
-fil_vars <- all_vars[! all_vars %in% c("roughness","slope")]
+fil_vars <- all_vars[! all_vars %in% c("roughness","slope","elevation")]
 
 # Save list of filtered variable names
 save(fil_vars,
