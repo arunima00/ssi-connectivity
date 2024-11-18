@@ -11,7 +11,7 @@ proj_path <- "C:/Users/aruni/arunima/IISERTpt/Connectivity/"
 ## Repeat the following process for all raster stacks for present
 
 region <- "nil1400"
-vars <- "gland"
+vars <- "forest"
 sc <- "present"
 
 # Read raster stack
@@ -58,7 +58,7 @@ all_vars # view all variables
 df_th # view correlated variables
 
 # Remove variables with correlation > 0.7 
-fil_vars <- all_vars[! all_vars %in% c("roughness","slope","elevation")]
+fil_vars <- all_vars[! all_vars %in% c("roughness","slope","elevation","treecov","prox_woodland")]
 
 # Save list of filtered variable names
 save(fil_vars,
