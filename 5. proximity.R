@@ -117,64 +117,26 @@ writeRaster(prox_woodland_1995,
             filename = paste0(proj_path,"GIS/Derived rasters/Proximity/Extra/prox_woodland_1995_30m.tif"),
             overwrite = TRUE)
 
-# Do the same for proximity to grassland
-
-prox_grassland_2017_temp <- rast(paste0(proj_path,"GIS/Derived rasters/Proximity/Extra/prox_grassland_2017_30m_temp.tif"))
-prox_grassland_1995_temp <- rast(paste0(proj_path,"GIS/Derived rasters/Proximity/Extra/prox_grassland_1995_30m_temp.tif"))
-
-prox_grassland_2017_inv <- rast(paste0(proj_path,"GIS/Derived rasters/Proximity/Extra/prox_grassland_2017_30m_inv.tif"))
-prox_grassland_1995_inv <- rast(paste0(proj_path,"GIS/Derived rasters/Proximity/Extra/prox_grassland_1995_30m_inv.tif"))
-
-prox_grassland_2017_temp <- project(prox_grassland_2017_temp,y = "epsg:4326")
-prox_grassland_1995_temp <- project(prox_grassland_1995_temp,y = "epsg:4326")
-
-prox_grassland_2017_inv <- project(prox_grassland_2017_inv,y = "epsg:4326")
-prox_grassland_1995_inv <- project(prox_grassland_1995_inv,y = "epsg:4326")
-
-prox_grassland_2017_inv <- (0 - prox_grassland_2017_inv)
-prox_grassland_1995_inv <- (0 - prox_grassland_1995_inv)
-
-prox_grassland_2017_inv <- mask(prox_grassland_2017_inv,
-                                mask = prox_grassland_2017_temp,
-                                maskvalues = 0,
-                                inverse = TRUE,
-                                updatevalue = NA)
-prox_grassland_1995_inv <- mask(prox_grassland_1995_inv,
-                                mask = prox_grassland_1995_temp,
-                                maskvalues = 0,
-                                inverse = TRUE,
-                                updatevalue = NA)
-
-prox_grassland_2017 <- merge(x = prox_grassland_2017_inv,
-                             y = prox_grassland_2017_temp,
-                             first = TRUE,
-                             na.rm = TRUE)
-prox_grassland_1995 <- merge(x = prox_grassland_1995_inv,
-                             y = prox_grassland_1995_temp,
-                             first = TRUE,
-                             na.rm = TRUE)
-
-names(prox_grassland_2017) <- "prox_grassland"
-names(prox_grassland_1995) <- "prox_grassland"
-
-writeRaster(prox_grassland_2017,
-            filename = paste0(proj_path,"GIS/Derived rasters/Proximity/Extra/prox_grassland_2017_30m.tif"),
-            overwrite = TRUE)
-writeRaster(prox_grassland_1995,
-            filename = paste0(proj_path,"GIS/Derived rasters/Proximity/Extra/prox_grassland_1995_30m.tif"),
-            overwrite = TRUE)
-
-# Read proximity to settlements raster
+# Read proximity to settlements and grassland rasters
 prox_smts_2017 <- rast(paste0(proj_path,"GIS/Derived rasters/Proximity/Extra/prox_settlements_2017_30m.tif"))
 prox_smts_1995 <- rast(paste0(proj_path,"GIS/Derived rasters/Proximity/Extra/prox_settlements_1995_30m.tif"))
+
+prox_grassland_2017 <- rast(paste0(proj_path,"GIS/Derived rasters/Proximity/Extra/prox_grassland_2017_30m_temp.tif"))
+prox_grassland_1995 <- rast(paste0(proj_path,"GIS/Derived rasters/Proximity/Extra/prox_grassland_1995_30m_temp.tif"))
 
 # Reproject rasters to WGS84 EPSG:4326
 prox_smts_2017 <- project(prox_smts_2017,y = "epsg:4326")
 prox_smts_1995 <- project(prox_smts_1995,y = "epsg:4326")
 
-# Rename layer
+prox_grassland_2017 <- project(prox_grassland_2017,y = "epsg:4326")
+prox_grassland_1995 <- project(prox_grassland_1995,y = "epsg:4326")
+
+# Rename layers
 names(prox_smts_2017) <- "prox_settlements"
 names(prox_smts_1995) <- "prox_settlements"
+
+names(prox_grassland_2017) <- "prox_grassland"
+names(prox_grassland_1995) <- "prox_grassland"
 
 # Read reference 1ha resolution raster
 clim_zone_res <- rast(paste0(proj_path,"GIS/Climate zones/clim_zone_1ha.tif"))
