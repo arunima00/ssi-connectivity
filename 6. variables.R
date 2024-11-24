@@ -150,16 +150,25 @@ for (region in c("nil1400","pahw1400")){
   
   # Create and save raster stacks for grassland species variables
   if (region == "nil1400"){
+    
+    # Read grassland cover percentage raster
+    ptcover_gland_2017 <- rast(paste0(proj_path,"SDM/Input/nil1400_1ha/predictors_all/gland_cover_2017.tif"))
+    ptcover_gland_1995 <- rast(paste0(proj_path,"SDM/Input/nil1400_1ha/predictors_all/gland_cover_1995.tif"))
+    
+    # Create raster stacks
     predictors_present_g <- c(prox_clip[[c(2,4)]],
                               lc_2017_clip,
                               topo_clip,
-                              clim_zone_clip)
+                              clim_zone_clip,
+                              ptcover_gland_2017)
     
     predictors_past_g <- c(prox_clip[[c(1,3)]],
                            lc_1995_clip,
                            topo_clip,
-                           clim_zone_clip)
+                           clim_zone_clip,
+                           ptcover_gland_1995)
     
+    # Save stacks
     writeRaster(predictors_present_g,
                 filename = paste0(proj_path,"SDM/Input/",region,"_1ha/",region,"_predictors_present_gland.tif"),
                 overwrite = TRUE)
