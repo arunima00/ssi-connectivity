@@ -70,3 +70,53 @@ lc_1995_res <- resample(x = lc_1995,
                         method = "near",
                         filename = paste0(proj_path,"GIS/Land cover/1995D/1995D_rast_1ha.tif"),
                         overwrite = TRUE)
+
+# Read shapefile for Nilgiris >1400m
+nil1400 <- vect(paste0(proj_path,"GIS/Shapefiles/Nilgiri1400m/Nilgiri1400m.shp"))
+
+# Crop and mask all rasters to shapefile for faster computation
+lc_2017 <- crop(lc_2017,nil1400,mask = TRUE)
+lc_1995 <- crop(lc_1995,nil1400,mask = TRUE)
+
+clim_zone_res <- crop(clim_zone_res,nil1400,mask = TRUE)
+
+# Polygonise rasters
+lc_2017_vect <- as.polygons(lc_2017,round = FALSE)
+lc_1995_vect <- as.polygons(lc_1995,round = FALSE)
+
+# Get fraction cover for each land cover class for each 1ha pixel
+ptcover_2017_rast <- rasterize(lc_2017_vect,
+                               clim_zone_res,
+                               field = "landcov",
+                               fun = "mean",
+                               cover = TRUE,
+                               update = TRUE,
+                               by = "landcov")
+
+ptcover_1995_rast <- rasterize(lc_1995_vect,
+                               clim_zone_res,
+                               field = "landcov",
+                               fun = "mean",
+                               cover = TRUE,
+                               update = TRUE,
+                               by = "landcov")
+
+# Convert to percentage
+ptcover_2017_rast <- ptcover_2017_rast * 100
+ptcover_1995_rast <- ptcover_1995_rast * 100
+
+# Extract percentage grassland cover layer and rename
+ptcover_gland_2017 <- ptcover_2017_rast$`Shola Grassland`
+names(ptcover_gland_2017) <- "gland_cover"
+
+ptcover_gland_1995 <- ptcover_1995_rast$`Shola Grassland`
+names(ptcover_gland_1995) <- "gland_cover"
+
+# Write raster to TIF file
+writeRaster(ptcover_gland_2017,
+            filename = paste0(proj_path,"SDM/Input/nil1400_1ha/predictors_all/gland_cover_2017.tif"),
+            overwrite = TRUE)
+
+writeRaster(ptcover_gland_1995,
+            filename = paste0(proj_path,"SDM/Input/nil1400_1ha/predictors_all/gland_cover_1995.tif"),
+            overwrite = TRUE)
