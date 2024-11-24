@@ -34,7 +34,7 @@ prox <- rast(files_prox)
 # Read climate zones raster
 clim_zone <- rast(paste0(proj_path,"GIS/Climate zones/clim_zone_1ha.tif"))
 
-# Create loop to clip and mask variables for both regions for forest species
+# Create loop to clip and mask variables for both regions
 for (region in c("nil1400","pahw1400")){
   # Read shapefiles based on region
   if (region == "nil1400"){
