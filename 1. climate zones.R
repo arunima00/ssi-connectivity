@@ -13,11 +13,17 @@ clim_zone <- rast(paste0(proj_path,"GIS/Climate zones/ClassifiedSumSWGPrecandTas
 # Convert into categorical raster and set levels
 levels(clim_zone) <- data.frame(id = 1:37,zone = 11:47)
 
-# Create empty ~1ha resolution raster from original 1km x 1km raster
-res <- rast(nrows = nrow(clim_zone) * 9,
-            ncols = ncol(clim_zone) * 9,
-            crs = crs(clim_zone),
-            ext = ext(clim_zone))
+# Read reference 1ha resolution raster
+rast_1ha <- rast(paste0(proj_path,"GIS/1ha grids.tif"))
+
+# Reproject climate zone raster to reference CRS
+clim_zone <- project(clim_zone,y = crs(rast_1ha))
+
+# Create empty ~1ha resolution raster for resampling
+res <- rast(nrows = nrow(rast_1ha),
+            ncols = ncol(rast_1ha),
+            crs = crs(rast_1ha),
+            ext = ext(rast_1ha))
 
 # Resample to 1ha resolution raster
 clim_zone_res <- resample(x = clim_zone,
