@@ -35,15 +35,22 @@ prox <- rast(files_prox)
 clim_zone <- rast(paste0(proj_path,"GIS/Climate zones/clim_zone_1ha.tif"))
 
 # Create loop to clip and mask variables for both regions
-for (region in c("nil1400","pahw1400")){
+for (region in c("nil1400","pahw1400","swg1400")) {
   # Read shapefiles based on region
-  if (region == "nil1400"){
-    shp <- vect(paste0(proj_path,"GIS/Shapefiles/Nilgiri1400m/Nilgiri1400m.shp"))
+  if (region == "nil1400") {
+    shp <- vect(paste0(proj_path,"GIS/Shapefiles/Nilgiri1400m/Nilgiri1400m.shp")
   }
   
-  if (region == "pahw1400"){
+  if (region == "pahw1400") {
     shp <- vect(paste0(proj_path,"GIS/Shapefiles/PA_HW_1400m/PA_HW_1400m.shp"))
   }
+  
+  if (region == "swg1400") {
+    shp <- vect(paste0(proj_path,"GIS/Shapefiles/SWG1400m/SWG1400m.shp"))
+  }
+  
+  # Reproject shapefile to reference CRS
+  shp <- project(shp,y = crs(clim_zone))
   
   # Create output folder in directory if does not exist
   if (! dir.exists(paste0(proj_path,"SDM/Input/",region,"_1ha/predictors_all"))){
@@ -91,7 +98,7 @@ for (region in c("nil1400","pahw1400")){
   
   # Create vector of output file names for final topographic variable layers
   output_paths <- c()
-  for (i in names(topo)){
+  for (i in names(topo)) {
     output_paths <- c(output_paths,
                       paste0(proj_path,"SDM/Input/",region,"_1ha/predictors_all/",i,".tif"))
   }
@@ -125,56 +132,56 @@ for (region in c("nil1400","pahw1400")){
                          overwrite = TRUE)
   
   # Create raster stacks for past and present for forest species variables
-  predictors_present_f <- c(treecov_2020_clip,
-                            ch_2020_clip,
-                            lc_2017_clip,
-                            topo_clip,
-                            prox_clip[[c(4,6,8)]],
-                            clim_zone_clip)
-  
-  predictors_past_f <- c(treecov_2000_clip,
-                         ch_2000_clip,
-                         lc_1995_clip,
-                         topo_clip,
-                         prox_clip[[c(3,5,7)]],
-                         clim_zone_clip)
-  
-  # Save raster stacks to output folder
-  writeRaster(predictors_present_f,
-              filename = paste0(proj_path,"SDM/Input/",region,"_1ha/",region,"_predictors_present_forest.tif"),
-              overwrite = TRUE)
-  
-  writeRaster(predictors_past_f,
-              filename = paste0(proj_path,"SDM/Input/",region,"_1ha/",region,"_predictors_past_forest.tif"),
-              overwrite = TRUE)
+  if (region %in% c("nil1400","pahw1400")) {
+    predictors_present_f <- c(treecov_2020_clip,
+                              ch_2020_clip,
+                              lc_2017_clip,
+                              topo_clip,
+                              prox_clip[[c(4,6,8)]],
+                              clim_zone_clip)
+    
+    predictors_past_f <- c(treecov_2000_clip,
+                           ch_2000_clip,
+                           lc_1995_clip,
+                           topo_clip,
+                           prox_clip[[c(3,5,7)]],
+                           clim_zone_clip)
+    
+    # Save raster stacks to output folder
+    writeRaster(predictors_present_f,
+                filename = paste0(proj_path,"SDM/Input/",region,"_1ha/",region,"_predictors_present.tif"),
+                overwrite = TRUE)
+    
+    writeRaster(predictors_past_f,
+                filename = paste0(proj_path,"SDM/Input/",region,"_1ha/",region,"_predictors_past.tif"),
+                overwrite = TRUE)
+  }
   
   # Create and save raster stacks for grassland species variables
-  if (region == "nil1400"){
+  if (region == "swg1400"){
     
     # Read grassland cover percentage raster
     ptcover_gland_2017 <- rast(paste0(proj_path,"SDM/Input/nil1400_1ha/predictors_all/gland_cover_2017.tif"))
     ptcover_gland_1995 <- rast(paste0(proj_path,"SDM/Input/nil1400_1ha/predictors_all/gland_cover_1995.tif"))
     
     # Create raster stacks
-    predictors_present_g <- c(prox_clip[[c(2,4)]],
-                              lc_2017_clip,
+    predictors_present_g <- c(prox_clip[[2]],
                               topo_clip,
                               clim_zone_clip,
                               ptcover_gland_2017)
     
-    predictors_past_g <- c(prox_clip[[c(1,3)]],
-                           lc_1995_clip,
+    predictors_past_g <- c(prox_clip[[1]],
                            topo_clip,
                            clim_zone_clip,
                            ptcover_gland_1995)
     
     # Save stacks
     writeRaster(predictors_present_g,
-                filename = paste0(proj_path,"SDM/Input/",region,"_1ha/",region,"_predictors_present_gland.tif"),
+                filename = paste0(proj_path,"SDM/Input/",region,"_1ha/",region,"_predictors_present.tif"),
                 overwrite = TRUE)
     
     writeRaster(predictors_past_g,
-                filename = paste0(proj_path,"SDM/Input/",region,"_1ha/",region,"_predictors_past_gland.tif"),
+                filename = paste0(proj_path,"SDM/Input/",region,"_1ha/",region,"_predictors_past.tif"),
                 overwrite = TRUE)
   }
 }
