@@ -12,31 +12,28 @@ proj_path <- "C:/Users/aruni/arunima/IISERTpt/Connectivity/"
 
 # Create loop to run SDMs for all species
 for (spec in c("SHAL","SHMA","MOFA","MOCA","ANNI")){
-  ## Set species-specific region and type of variables
+  ## Set species-specific region
   
   # Nilgiris
   if (spec %in% c("SHAL","MOFA")){
     region <- "pahw1400"
-    vars <- "forest"
   }
   
   # Palani-Anamalai-Highwavies
   if (spec %in% c("SHMA","MOCA")){
     region <- "nil1400"
-    vars <- "forest"
   }
   
-  # Grassland species
+  # Southern Western Ghats
   if (spec == "ANNI"){
-    region <- "nil1400"
-    vars <- "gland"
+    region <- "swg1400"
   }
   
   # Load vector with filtered variables
-  load(paste0(proj_path,"SDM/Input/",region,"_1ha/Correlation/",region,"_",vars,"_fil.RData"))
+  load(paste0(proj_path,"SDM/Input/",region,"_1ha/Correlation/",region,"_fil.RData"))
   
   # Read raster stack of predictor variables
-  predictors <- rast(paste0(proj_path,"SDM/Input/",region,"_1ha/",region,"_predictors_present_",vars,".tif"))
+  predictors <- rast(paste0(proj_path,"SDM/Input/",region,"_1ha/",region,"_predictors_present.tif"))
   
   # Filter to get only non-correlated variables
   predictors <- predictors[[fil_vars]]
@@ -212,7 +209,7 @@ for (spec in c("SHAL","SHMA","MOFA","MOCA","ANNI")){
   }
   
   # Read past predictor variables raster stack
-  predictors_past <- rast(paste0(proj_path,"SDM/Input/",region,"_1ha/",region,"_predictors_past_",vars,".tif"))
+  predictors_past <- rast(paste0(proj_path,"SDM/Input/",region,"_1ha/",region,"_predictors_past.tif"))
   
   # Filter out unused variables
   predictors_past <- predictors_past[[fil_vars]]
