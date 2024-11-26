@@ -34,11 +34,15 @@ prox <- rast(files_prox)
 # Read climate zones raster
 clim_zone <- rast(paste0(proj_path,"GIS/Climate zones/clim_zone_1ha.tif"))
 
+# Read grassland cover percentage raster
+ptcover_gland_2017 <- rast(paste0(proj_path,"GIS/Derived rasters/gland_cover_2017.tif"))
+ptcover_gland_1995 <- rast(paste0(proj_path,"GIS/Derived rasters/gland_cover_1995.tif"))
+
 # Create loop to clip and mask variables for both regions
 for (region in c("nil1400","pahw1400","swg1400")) {
   # Read shapefiles based on region
   if (region == "nil1400") {
-    shp <- vect(paste0(proj_path,"GIS/Shapefiles/Nilgiri1400m/Nilgiri1400m.shp")
+    shp <- vect(paste0(proj_path,"GIS/Shapefiles/Nilgiri1400m/Nilgiri1400m.shp"))
   }
   
   if (region == "pahw1400") {
@@ -131,6 +135,19 @@ for (region in c("nil1400","pahw1400","swg1400")) {
                          filename = paste0(proj_path,"SDM/Input/",region,"_1ha/predictors_all/clim_zone.tif"),
                          overwrite = TRUE)
   
+  # Crop and mask grassland cover layer to specified region and write to TIF file
+  ptcover_gland_2017_clip <- crop(x = ptcover_gland_2017,
+                                  y = shp,
+                                  mask = TRUE,
+                                  filename = paste0(proj_path,"SDM/Input/",region,"_1ha/predictors_all/gland_cover_2017.tif"),
+                                  overwrite = TRUE)
+  
+  ptcover_gland_1995_clip <- crop(x = ptcover_gland_1995,
+                                  y = shp,
+                                  mask = TRUE,
+                                  filename = paste0(proj_path,"SDM/Input/",region,"_1ha/predictors_all/gland_cover_1995.tif"),
+                                  overwrite = TRUE)
+  
   # Create raster stacks for past and present for forest species variables
   if (region %in% c("nil1400","pahw1400")) {
     predictors_present_f <- c(treecov_2020_clip,
@@ -158,22 +175,18 @@ for (region in c("nil1400","pahw1400","swg1400")) {
   }
   
   # Create and save raster stacks for grassland species variables
-  if (region == "swg1400"){
-    
-    # Read grassland cover percentage raster
-    ptcover_gland_2017 <- rast(paste0(proj_path,"SDM/Input/nil1400_1ha/predictors_all/gland_cover_2017.tif"))
-    ptcover_gland_1995 <- rast(paste0(proj_path,"SDM/Input/nil1400_1ha/predictors_all/gland_cover_1995.tif"))
+  if (region == "swg1400") {
     
     # Create raster stacks
     predictors_present_g <- c(prox_clip[[2]],
                               topo_clip,
                               clim_zone_clip,
-                              ptcover_gland_2017)
+                              ptcover_gland_2017_clip)
     
     predictors_past_g <- c(prox_clip[[1]],
                            topo_clip,
                            clim_zone_clip,
-                           ptcover_gland_1995)
+                           ptcover_gland_1995_clip)
     
     # Save stacks
     writeRaster(predictors_present_g,
