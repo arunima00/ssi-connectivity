@@ -33,11 +33,11 @@ names(cc_2000) <- "treecov"
 names(cc_2020) <- "treecov"
 
 # Write merged rasters to TIF files
-writeRaster(ch_2020,
-            filename = paste0(proj_path,"GIS/Canopy/Canopy height/2020/canopy height 2020.tif"),
-            overwrite = TRUE)
 writeRaster(ch_2000,
             filename = paste0(proj_path,"GIS/Canopy/Canopy height/2000/canopy height 2000.tif"),
+            overwrite = TRUE)
+writeRaster(ch_2020,
+            filename = paste0(proj_path,"GIS/Canopy/Canopy height/2020/canopy height 2020.tif"),
             overwrite = TRUE)
 
 writeRaster(cc_2000,
@@ -48,33 +48,26 @@ writeRaster(cc_2020,
             overwrite = TRUE)
 
 # Read reference 1ha resolution raster
-clim_zone_res <- rast(paste0(proj_path,"GIS/Climate zones/clim_zone_1ha.tif"))
+rast_1ha <- rast(paste0(proj_path,"GIS/1ha grids.tif"))
 
-# Create empty 1ha resolution raster
-res <- rast(nrows = nrow(clim_zone_res),
-            ncols = ncol(clim_zone_res),
-            ext = ext(clim_zone_res),
-            crs = crs(clim_zone_res))
-
-# Resample all rasters to 1ha and write to TIF files
-ch_2000_res <- resample(x = ch_2000,
-                        y = res,
-                        method = "med",
-                        filename = paste0(proj_path,"GIS/Canopy/Canopy height/2000/canopy height_2000_1ha.tif"),
-                        overwrite = TRUE)
-ch_2020_res <- resample(x = ch_2020,
-                        y = res,
-                        method = "med",
-                        filename = paste0(proj_path,"GIS/Canopy/Canopy height/2020/canopy height_2020_1ha.tif"),
-                        overwrite = TRUE)
-
-cc_2000_res <- resample(x = cc_2000,
-                        y = res,
-                        method = "med",
-                        filename = paste0(proj_path,"GIS/Canopy/Tree Cover/treecov_2000_1ha.tif"),
-                        overwrite = TRUE)
-cc_2020_res <- resample(x = cc_2020,
-                        y = res,
-                        method = "med",
-                        filename = paste0(proj_path,"GIS/Canopy/Tree Cover/treecov_2020_1ha.tif"),
-                        overwrite = TRUE)
+# Reproject all rasters to reference raster and write to TIF files
+ch_2000_1ha <- project(x = ch_2000,
+                       y = rast_1ha,
+                       method = "med",
+                       filename = paste0(proj_path,"GIS/Canopy/Canopy height/2000/canopy height_2000_1ha.tif"),
+                       overwrite = TRUE)
+ch_2020_1ha <- project(x = ch_2020,
+                       y = rast_1ha,
+                       method = "med",
+                       filename = paste0(proj_path,"GIS/Canopy/Canopy height/2020/canopy height_2020_1ha.tif"),
+                       overwrite = TRUE)
+cc_2000_1ha <- project(x = cc_2000,
+                       y = rast_1ha,
+                       method = "med",
+                       filename = paste0(proj_path,"GIS/Canopy/Tree Cover/treecov_2000_1ha.tif"),
+                       overwrite = TRUE)
+cc_2020_1ha <- project(x = cc_2020,
+                       y = rast_1ha,
+                       method = "med",
+                       filename = paste0(proj_path,"GIS/Canopy/Tree Cover/treecov_2020_1ha.tif"),
+                       overwrite = TRUE)
