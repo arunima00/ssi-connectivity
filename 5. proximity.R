@@ -25,13 +25,6 @@ prox_shola_1995_temp <- rast(paste0(proj_path,"GIS/Derived rasters/Proximity/Ext
 prox_shola_2017_inv <- rast(paste0(proj_path,"GIS/Derived rasters/Proximity/Extra/prox_shola_2017_30m_inv.tif"))
 prox_shola_1995_inv <- rast(paste0(proj_path,"GIS/Derived rasters/Proximity/Extra/prox_shola_1995_30m_inv.tif"))
 
-# Reproject rasters to WGS84 EPSG:4326
-prox_shola_2017_temp <- project(prox_shola_2017_temp,y = "epsg:4326")
-prox_shola_1995_temp <- project(prox_shola_1995_temp,y = "epsg:4326")
-
-prox_shola_2017_inv <- project(prox_shola_2017_inv,y = "epsg:4326")
-prox_shola_1995_inv <- project(prox_shola_1995_inv,y = "epsg:4326")
-
 # Set proximity to shola boundary from inside shola patches to negative values
 prox_shola_2017_inv <- (0 - prox_shola_2017_inv)
 prox_shola_1995_inv <- (0 - prox_shola_1995_inv)
@@ -78,12 +71,6 @@ prox_woodland_1995_temp <- rast(paste0(proj_path,"GIS/Derived rasters/Proximity/
 prox_woodland_2017_inv <- rast(paste0(proj_path,"GIS/Derived rasters/Proximity/Extra/prox_woodland_2017_30m_inv.tif"))
 prox_woodland_1995_inv <- rast(paste0(proj_path,"GIS/Derived rasters/Proximity/Extra/prox_woodland_1995_30m_inv.tif"))
 
-prox_woodland_2017_temp <- project(prox_woodland_2017_temp,y = "epsg:4326")
-prox_woodland_1995_temp <- project(prox_woodland_1995_temp,y = "epsg:4326")
-
-prox_woodland_2017_inv <- project(prox_woodland_2017_inv,y = "epsg:4326")
-prox_woodland_1995_inv <- project(prox_woodland_1995_inv,y = "epsg:4326")
-
 prox_woodland_2017_inv <- (0 - prox_woodland_2017_inv)
 prox_woodland_1995_inv <- (0 - prox_woodland_1995_inv)
 
@@ -124,13 +111,6 @@ prox_smts_1995 <- rast(paste0(proj_path,"GIS/Derived rasters/Proximity/Extra/pro
 prox_grassland_2017 <- rast(paste0(proj_path,"GIS/Derived rasters/Proximity/Extra/prox_grassland_2017_30m_temp.tif"))
 prox_grassland_1995 <- rast(paste0(proj_path,"GIS/Derived rasters/Proximity/Extra/prox_grassland_1995_30m_temp.tif"))
 
-# Reproject rasters to WGS84 EPSG:4326
-prox_smts_2017 <- project(prox_smts_2017,y = "epsg:4326")
-prox_smts_1995 <- project(prox_smts_1995,y = "epsg:4326")
-
-prox_grassland_2017 <- project(prox_grassland_2017,y = "epsg:4326")
-prox_grassland_1995 <- project(prox_grassland_1995,y = "epsg:4326")
-
 # Rename layers
 names(prox_smts_2017) <- "prox_settlements"
 names(prox_smts_1995) <- "prox_settlements"
@@ -139,55 +119,49 @@ names(prox_grassland_2017) <- "prox_grassland"
 names(prox_grassland_1995) <- "prox_grassland"
 
 # Read reference 1ha resolution raster
-clim_zone_res <- rast(paste0(proj_path,"GIS/Climate zones/clim_zone_1ha.tif"))
+rast_1ha <- rast(paste0(proj_path,"GIS/1ha grids.tif"))
 
-# Create empty 1ha resolution raster
-res <- rast(nrows = nrow(clim_zone_res),
-            ncols = ncol(clim_zone_res),
-            ext = ext(clim_zone_res),
-            crs = crs(clim_zone_res))
-
-# Resample all rasters to 1ha resolution and write to TIF files
-prox_shola_2017_res <- resample(x = prox_shola_2017,
-                                y = res,
-                                method = "med",
-                                filename = paste0(proj_path,"GIS/Derived rasters/Proximity/prox_shola_2017_1ha.tif"),
-                                overwrite = TRUE)
-prox_shola_1995_res <- resample(x = prox_shola_1995,
-                                y = res,
-                                method = "med",
-                                filename = paste0(proj_path,"GIS/Derived rasters/Proximity/prox_shola_1995_1ha.tif"),
-                                overwrite = TRUE)
-
-prox_woodland_2017_res <- resample(x = prox_woodland_2017,
-                                   y = res,
-                                   method = "med",
-                                   filename = paste0(proj_path,"GIS/Derived rasters/Proximity/prox_woodland_2017_1ha.tif"),
-                                   overwrite = TRUE)
-prox_woodland_1995_res <- resample(x = prox_woodland_1995,
-                                   y = res,
-                                   method = "med",
-                                   filename = paste0(proj_path,"GIS/Derived rasters/Proximity/prox_woodland_1995_1ha.tif"),
-                                   overwrite = TRUE)
-
-prox_grassland_2017_res <- resample(x = prox_grassland_2017,
-                                    y = res,
-                                    method = "med",
-                                    filename = paste0(proj_path,"GIS/Derived rasters/Proximity/prox_grassland_2017_1ha.tif"),
-                                    overwrite = TRUE)
-prox_grassland_1995_res <- resample(x = prox_grassland_1995,
-                                    y = res,
-                                    method = "med",
-                                    filename = paste0(proj_path,"GIS/Derived rasters/Proximity/prox_grassland_1995_1ha.tif"),
-                                    overwrite = TRUE)
-
-prox_smts_2017_res <- resample(x = prox_smts_2017,
-                               y = res,
+# Project all rasters to reference raster and write to TIF files
+prox_shola_2017_1ha <- project(x = prox_shola_2017,
+                               y = rast_1ha,
                                method = "med",
-                               filename = paste0(proj_path,"GIS/Derived rasters/Proximity/prox_settlements_2017_1ha.tif"),
+                               filename = paste0(proj_path,"GIS/Derived rasters/Proximity/prox_shola_2017_1ha.tif"),
                                overwrite = TRUE)
-prox_smts_1995_res <- resample(x = prox_smts_1995,
-                               y = res,
+prox_shola_1995_1ha <- project(x = prox_shola_1995,
+                               y = rast_1ha,
                                method = "med",
-                               filename = paste0(proj_path,"GIS/Derived rasters/Proximity/prox_settlements_1995_1ha.tif"),
+                               filename = paste0(proj_path,"GIS/Derived rasters/Proximity/prox_shola_1995_1ha.tif"),
                                overwrite = TRUE)
+
+prox_woodland_2017_1ha <- project(x = prox_woodland_2017,
+                                  y = rast_1ha,
+                                  method = "med",
+                                  filename = paste0(proj_path,"GIS/Derived rasters/Proximity/prox_woodland_2017_1ha.tif"),
+                                  overwrite = TRUE)
+prox_woodland_1995_1ha <- project(x = prox_woodland_1995,
+                                  y = rast_1ha,
+                                  method = "med",
+                                  filename = paste0(proj_path,"GIS/Derived rasters/Proximity/prox_woodland_1995_1ha.tif"),
+                                  overwrite = TRUE)
+
+prox_grassland_2017_1ha <- project(x = prox_grassland_2017,
+                                   y = rast_1ha,
+                                   method = "med",
+                                   filename = paste0(proj_path,"GIS/Derived rasters/Proximity/prox_grassland_2017_1ha.tif"),
+                                   overwrite = TRUE)
+prox_grassland_1995_1ha <- project(x = prox_grassland_1995,
+                                   y = rast_1ha,
+                                   method = "med",
+                                   filename = paste0(proj_path,"GIS/Derived rasters/Proximity/prox_grassland_1995_1ha.tif"),
+                                   overwrite = TRUE)
+
+prox_smts_2017_1ha <- project(x = prox_smts_2017,
+                              y = rast_1ha,
+                              method = "med",
+                              filename = paste0(proj_path,"GIS/Derived rasters/Proximity/prox_settlements_2017_1ha.tif"),
+                              overwrite = TRUE)
+prox_smts_1995_1ha <- project(x = prox_smts_1995,
+                              y = rast_1ha,
+                              method = "med",
+                              filename = paste0(proj_path,"GIS/Derived rasters/Proximity/prox_settlements_1995_1ha.tif"),
+                              overwrite = TRUE)
