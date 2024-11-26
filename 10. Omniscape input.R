@@ -67,6 +67,9 @@ for (y in c("1995","2017")) {
     # Read corresponding land cover raster
     landcov <- rast(paste0(proj_path,"SDM/Input/",k[3],"_1ha/predictors_all/landcov_",y,".tif"))
     
+    # Reproject land cover raster to EPSG:4326 WGS84 CRS
+    landcov <- project(landcov,y = "epsg:4326")
+    
     # Extract species-specific source pixels from land cover raster
     if (k[2] != "ANNI") {
       s <- subst(landcov,from = c(1,3:8),to = NA,raw = TRUE)
