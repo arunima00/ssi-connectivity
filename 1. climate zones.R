@@ -49,24 +49,15 @@ clim_zone <- classify(clim_zone, rcl = rclmat)
 # Convert to categorical raster and setlevels
 levels(clim_zone) <- data.frame(id = 1:28,zone = 1:28)
 
-# Read reference 1ha resolution raster
-rast_1ha <- rast(paste0(proj_path,"GIS/1ha grids.tif"))
-
-# Create empty ~1ha resolution raster for resampling
-res <- rast(nrows = nrow(rast_1ha),
-            ncols = ncol(rast_1ha),
-            crs = crs(rast_1ha),
-            ext = ext(rast_1ha))
-
-# Reproject climate zone raster to reference CRS
-clim_zone <- project(clim_zone,y = crs(rast_1ha))
-
 # Rename layer
 names(clim_zone) <- "clim_zone"
 
-# Resample to 1ha resolution raster and write to TIF file
-clim_zone_res <- resample(x = clim_zone,
-                          y = res,
-                          method = "near",
-                          filename = paste0(proj_path,"GIS/Climate zones/clim_zone_1ha.tif"),
-                          overwrite = TRUE)
+# Read reference 1ha resolution raster
+rast_1ha <- rast(paste0(proj_path,"GIS/1ha grids.tif"))
+
+# Reproject climate zone raster to reference raster and write to TIF file
+clim_zone_1ha <- project(x = clim_zone,
+                         y = rast_1ha,
+                         method = "near",
+                         filename = paste0(proj_path,"GIS/Climate zones/clim_zone_1ha.tif"),
+                         overwrite = TRUE)
