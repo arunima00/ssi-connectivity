@@ -46,11 +46,21 @@ for (spec in c("SHAL","SHMA","MOFA","MOCA","ANNI")){
   a_coords <- filter(occ,Presence == 0)[,c(1,2)]
   
   # Combine all input data and extract predictor variables for all locations
-  data <- prepareSWD(species = spec,
-                     p = p_coords,
-                     a = a_coords,
-                     env = predictors,
-                     categorical = c("landcov","clim_zone"))
+  if (spec != "ANNI") {
+    data <- prepareSWD(species = spec,
+                       p = p_coords,
+                       a = a_coords,
+                       env = predictors,
+                       categorical = "clim_zone")
+  }
+  
+  if (spec == "ANNI") {
+    data <- prepareSWD(species = spec,
+                       p = p_coords,
+                       a = a_coords,
+                       env = predictors,
+                       categorical = c("landcov","clim_zone"))
+  }
   
   # Split data in training and testing datasets
   c(train, test) %<-% trainValTest(data,
