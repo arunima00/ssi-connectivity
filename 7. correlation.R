@@ -12,8 +12,8 @@ proj_path <- "C:/Users/aruni/arunima/IISERTpt/Connectivity/"
 
 # Set region of interest
 #region <- "swg1400"
-#region <- "nil1400"
-region <- "pahw1400"
+region <- "nil1400"
+#region <- "pahw1400"
 
 # Read raster stack
 st <- rast(paste0(proj_path,"SDM/Input/",region,"_1ha/",region,"_predictors_present.tif"))
@@ -64,7 +64,7 @@ all_vars # view all variables
 df_th # view correlated variables
 
 # Remove variables with correlation > 0.7 
-fil_vars <- all_vars[! all_vars %in% c("roughness","slope","canopyheight")]
+fil_vars <- all_vars[! all_vars %in% c("roughness","slope","canopyheight","elevation","prox_woodland")]
 
 # Save list of filtered variable names
 save(fil_vars,
