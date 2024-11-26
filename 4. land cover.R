@@ -61,53 +61,46 @@ lc_1995_1ha <- project(x = lc_1995,
                        filename = paste0(proj_path,"GIS/Land cover/1995D/1995D_rast_1ha.tif"),
                        overwrite = TRUE)
 
-# Crop all rasters to extent of reference raster
-lc_2017 <- crop(lc_2017,ext(rast_1ha))
-lc_1995 <- crop(lc_1995,ext(rast_1ha))
-
 # Polygonise rasters
-lc_2017_vect <- as.polygons(lc_2017,round = FALSE,dissolve = TRUE)
+lc_2017_vect <- as.polygons(lc_2017,round = FALSE)
 lc_1995_vect <- as.polygons(lc_1995,round = FALSE)
 
-# Get fraction cover for each land cover class for each 1ha pixel
-ptcover_2017_rast <- rasterize(lc_2017_vect,
-                               rast_1ha,
-                               field = "landcov",
-                               fun = "mean",
-                               cover = TRUE,
-                               update = TRUE,
-                               by = "landcov")
+# Extract grassland polygons
+lc_2017_gland <- lc_2017_vect[lc_2017_vect$landcov == "Shola Grassland"]
+lc_1995_gland <- lc_1995_vect[lc_1995_vect$landcov == "Shola Grassland"]
 
-ptcover_1995_rast <- rasterize(lc_1995_vect,
-                               rast_1ha,
-                               field = "landcov",
-                               fun = "mean",
-                               cover = TRUE,
-                               update = TRUE,
-                               by = "landcov")
+# Get fraction cover for each land cover class for each 1ha pixel
+ptcover_gland_2017 <- rasterize(lc_2017_gland,
+                                rast_1ha,
+                                field = "landcov",
+                                fun = "mean",
+                                cover = TRUE,
+                                update = TRUE)
+
+ptcover_gland_1995 <- rasterize(lc_1995_gland,
+                                rast_1ha,
+                                field = "landcov",
+                                fun = "mean",
+                                cover = TRUE,
+                                update = TRUE)
 
 # Convert to percentage
-ptcover_2017_rast <- ptcover_2017_rast * 100
-ptcover_1995_rast <- ptcover_1995_rast * 100
-
-# Extract percentage grassland cover layer and rename
-ptcover_gland_2017 <- ptcover_2017_rast$`Shola Grassland`
-names(ptcover_gland_2017) <- "gland_cover"
-
-ptcover_gland_1995 <- ptcover_1995_rast$`Shola Grassland`
-names(ptcover_gland_1995) <- "gland_cover"
+ptcover_gland_2017 <- ptcover_gland_2017 * 100
+ptcover_gland_1995 <- ptcover_gland_1995 * 100
 
 # Set background pixels to 0
 ptcover_gland_2017[is.na(ptcover_gland_2017)] <- 0
 ptcover_gland_1995[is.na(ptcover_gland_1995)] <- 0
 
-# Mask to shapefile and write to TIF file
-ptcover_gland_2017_nil <- mask(ptcover_gland_2017,
-                               mask = shp,
-                               filename = paste0(proj_path,"SDM/Input/nil1400_1ha/predictors_all/gland_cover_2017.tif"),
-                               overwrite = TRUE)
+# Rename layer
+names(ptcover_gland_2017) <- "gland_cover"
+names(ptcover_gland_1995) <- "gland_cover"
 
-ptcover_gland_1995_nil <- mask(ptcover_gland_1995,
-                               mask = shp,
-                               filename = paste0(proj_path,"SDM/Input/nil1400_1ha/predictors_all/gland_cover_1995.tif"),
-                               overwrite = TRUE)
+# Write rasters to TIF file
+writeRaster(ptcover_gland_2017,
+            filename = paste0(proj_path,"GIS/Derived rasters/gland_cover_2017.tif"),
+            overwrite = TRUE)
+
+writeRaster(ptcover_gland_1995,
+            filename = paste0(proj_path,"GIS/Derived rasters/gland_cover_1995.tif"),
+            overwrite = TRUE)
