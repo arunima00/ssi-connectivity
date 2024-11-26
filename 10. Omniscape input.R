@@ -32,6 +32,9 @@ for (y in c("1995","2017")) {
     # Read raster
     r1 <- rast(i)
     
+    # Reproject raster to EPSG:4326 WGS84 CRS
+    r1 <- project(r1,y = "epsg:4326")
+    
     # Transform prediction maps to resistance layers using three different formulae
     r2 <- 100 - (99 * ((1 - exp(-0.25 * r1))/(1 - exp(-0.25))))
     r3 <- 100 - (99 * ((1 - exp(-2 * r1))/(1 - exp(-2))))
