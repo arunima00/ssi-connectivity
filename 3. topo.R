@@ -26,36 +26,30 @@ names(dem) <- "elevation"
 names(twi) <- "TWI"
 
 # Read reference 1ha resolution raster
-clim_zone_res <- rast(paste0(proj_path,"GIS/Climate zones/clim_zone_1ha.tif"))
+rast_1ha <- rast(paste0(proj_path,"GIS/1ha grids.tif"))
 
-# Create empty 1ha resolution raster
-res <- rast(nrows = nrow(clim_zone_res),
-            ncols = ncol(clim_zone_res),
-            ext = ext(clim_zone_res),
-            crs = crs(clim_zone_res))
-
-# Resample DEM and TWI to 1ha and write to TIF file
-dem_res <- resample(x = dem,
-                    y = res,
-                    method = "med",
-                    filename = paste0(proj_path,"GIS/Derived rasters/Topo variables/elevation_1ha.tif"),
-                    overwrite = TRUE)
-twi_res <- resample(x = twi,
-                    y = res,
-                    method = "average",
-                    filename = paste0(proj_path,"GIS/Derived rasters/Topo variables/TWI_1ha.tif"),
-                    overwrite = TRUE)
-
-# Create loop to derive all topographic variables from DEM and resample
-for (i in c("aspect","slope","TPI","TRI","roughness")){
+# Create loop to derive all topographic variables from DEM and reproject
+for (i in c("aspect","slope","TPI","TRI","roughness")) {
   
   # Derive topographic variable "i"
   topo <- terrain(dem,v = i)
   
-  # Resample variable raster to 1ha and write to TIF file
-  topo_1ha <- resample(x = topo,
-                       y = res,
-                       method = "med",
-                       filename = paste0(proj_path,"GIS/Derived rasters/Topo variables/",i,"_1ha.tif"),
-                       overwrite = TRUE)
+  # Reproject to reference raster and write to TIF file
+  topo_1ha <- project(x = topo,
+                      y = rast_1ha,
+                      method = "med",
+                      filename = paste0(proj_path,"GIS/Derived rasters/Topo variables/",i,"_1ha.tif"),
+                      overwrite = TRUE)
 }
+
+# Reproject DEM and TWI to reference raster and write to TIF file
+dem_1ha <- project(x = dem,
+                   y = rast_1ha,
+                   method = "med",
+                   filename = paste0(proj_path,"GIS/Derived rasters/Topo variables/elevation_1ha.tif"),
+                   overwrite = TRUE)
+twi_1ha <- project(x = twi,
+                   y = rast_1ha,
+                   method = "med",
+                   filename = paste0(proj_path,"GIS/Derived rasters/Topo variables/TWI_1ha.tif"),
+                   overwrite = TRUE)
