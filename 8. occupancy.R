@@ -11,6 +11,18 @@ proj_path <- "C:/Users/aruni/arunima/IISERTpt/Connectivity/"
 # Read occupancy data for forest species to dataframe
 df <- read.csv(paste0(proj_path,"occupancy data/Jobin/clipped_areas_added_w_sites1.csv"))
 
+# Read reference 1ha resolution raster
+rast_1ha <- rast(paste0(proj_path,"GIS/1ha grids.tif"))
+
+# Convert to points layer
+df_vect <- vect(df,geom = c("Longitude","Latitude"))
+
+# Reproject to reference CRS
+df_vect <- project(df_vect,y = crs(rast_1ha))
+
+# Convert back to dataframe
+df <- as.data.frame(df_vect,row.names = NULL)
+
 # Create loop to separate datasets for each species
 for (i in c("SHAL","SHMA","MOFA","MOCA","ANNI")) {
   
@@ -63,9 +75,12 @@ for (i in c("SHAL","SHMA","MOFA","MOCA","ANNI")) {
     df_sel <- cbind(df[,c("Site","Longitude","Latitude")],
                     df %>% select(ends_with("ANNI")))
     
-    # Read shapefile for Nilgiris 1400m contour polygon
+    # Read shapefile for >1400m contour polygon
     shp <- vect(paste0(proj_path,"GIS/Shapefiles/Nilgiri1400m/Nilgiri1400m.shp"))
   }
+  
+  # Reproject shapefile to reference CRS
+  shp <- project(shp,y = crs(rast_1ha))
   
   # Filter data for species-specific region
   df_sel <- filter(df_sel,
