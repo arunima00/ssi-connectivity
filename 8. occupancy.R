@@ -11,17 +11,17 @@ proj_path <- "C:/Users/aruni/arunima/IISERTpt/Connectivity/"
 # Read occupancy data for forest species to dataframe
 df <- read.csv(paste0(proj_path,"occupancy data/Jobin/clipped_areas_added_w_sites1.csv"))
 
+# Convert to points layer
+df_vect <- vect(df,geom = c("Longitude","Latitude"),crs = "epsg:4326")
+
 # Read reference 1ha resolution raster
 rast_1ha <- rast(paste0(proj_path,"GIS/1ha grids.tif"))
-
-# Convert to points layer
-df_vect <- vect(df,geom = c("Longitude","Latitude"))
 
 # Reproject to reference CRS
 df_vect <- project(df_vect,y = crs(rast_1ha))
 
 # Convert back to dataframe
-df <- as.data.frame(df_vect,row.names = NULL)
+df <- as.data.frame(df_vect,row.names = NULL,geom = "XY")
 
 # Create loop to separate datasets for each species
 for (i in c("SHAL","SHMA","MOFA","MOCA","ANNI")) {
@@ -29,7 +29,7 @@ for (i in c("SHAL","SHMA","MOFA","MOCA","ANNI")) {
   ## White-bellied Sholakili
   if (i == "SHAL"){
     # Filter data for Sholakilis
-    df_sel <- cbind(df[,c("Site","Longitude","Latitude")],
+    df_sel <- cbind(df[,c("Site","x","y")],
                     df %>% select(ends_with("SHKL")))
     
     # Read shapefile for Palani-Anamalai-Highwavies 1400m contour
@@ -39,7 +39,7 @@ for (i in c("SHAL","SHMA","MOFA","MOCA","ANNI")) {
   ## Palani Laughingthrush
   if (i == "MOFA"){
     # Filter data for Laughingthrushes
-    df_sel <- cbind(df[,c("Site","Longitude","Latitude")],
+    df_sel <- cbind(df[,c("Site","x","y")],
                     df %>% select(ends_with("LATH")))
     
     # Read shapefile for Palani-Anamalai-Highwavies 1400m contour polygon
@@ -49,7 +49,7 @@ for (i in c("SHAL","SHMA","MOFA","MOCA","ANNI")) {
   ## Nilgiri Sholakili
   if (i == "SHMA"){
     # Filter data for Sholakilis
-    df_sel <- cbind(df[,c("Site","Longitude","Latitude")],
+    df_sel <- cbind(df[,c("Site","x","y")],
                     df %>% select(ends_with("SHKL")))
     
     # Read shapefile for Nilgiris 1400m contour polygon
@@ -59,7 +59,7 @@ for (i in c("SHAL","SHMA","MOFA","MOCA","ANNI")) {
   ## Nilgiri Laughingthrush
   if (i == "MOCA"){
     # Filter data for Laughingthrushes
-    df_sel <- cbind(df[,c("Site","Longitude","Latitude")],
+    df_sel <- cbind(df[,c("Site","x","y")],
                     df %>% select(ends_with("LATH")))
     
     # Read shapefile for Nilgiris 1400m contour polygon
@@ -69,14 +69,23 @@ for (i in c("SHAL","SHMA","MOFA","MOCA","ANNI")) {
   ## Nilgiri Pipit
   if (i == "ANNI"){
     # Read nilgiri pipit dataset
-    df <- read.csv(paste0(proj_path,"/occupancy data/Jobin/dataset for pipit analysis.csv"))
+    df_anni <- read.csv(paste0(proj_path,"/occupancy data/Jobin/dataset for pipit analysis.csv"))
+    
+    # Convert to points layer
+    df_vect <- vect(df_anni,geom = c("Longitude","Latitude"),crs = "epsg:4326")
+    
+    # Reproject to reference CRS
+    df_vect <- project(df_vect,y = crs(rast_1ha))
+    
+    # Convert back to dataframe
+    df_anni <- as.data.frame(df_vect,row.names = NULL,geom = "XY")
     
     # Extract relevant columns only
-    df_sel <- cbind(df[,c("Site","Longitude","Latitude")],
-                    df %>% select(ends_with("ANNI")))
+    df_sel <- cbind(df_anni[,c("Site","x","y")],
+                    df_anni %>% select(ends_with("ANNI")))
     
     # Read shapefile for >1400m contour polygon
-    shp <- vect(paste0(proj_path,"GIS/Shapefiles/Nilgiri1400m/Nilgiri1400m.shp"))
+    shp <- vect(paste0(proj_path,"GIS/Shapefiles/SWG1400m/SWG1400m.shp"))
   }
   
   # Reproject shapefile to reference CRS
@@ -84,10 +93,10 @@ for (i in c("SHAL","SHMA","MOFA","MOCA","ANNI")) {
   
   # Filter data for species-specific region
   df_sel <- filter(df_sel,
-                   Longitude >= xmin(shp),
-                   Longitude <= xmax(shp),
-                   Latitude >= ymin(shp),
-                   Latitude <= ymax(shp))
+                   x >= xmin(shp),
+                   x <= xmax(shp),
+                   y >= ymin(shp),
+                   y <= ymax(shp))
   
   # Remove all rows with NAs
   df_sel <- df_sel %>% na.omit()
@@ -117,15 +126,17 @@ for (i in c("SHAL","SHMA","MOFA","MOCA","ANNI")) {
 
   # Create new dataframe with grid lat-long, species presence/absence, 
   # detection probability and average abundance
-  df_final <- cbind(df_sel[c("Longitude","Latitude")],
+  df_final <- cbind(df_sel[c("x","y")],
                     pres,
                     det_prob,
                     avg)
   
   # Rename columns
-  colnames(df_final)[3:5] <- c("Presence",
-                               "Detection probability",
-                               "Abundance avg.")
+  colnames(df_final) <- c("Longitude",
+                          "Latitude",
+                          "Presence",
+                          "Detection probability",
+                          "Abundance avg.")
 
   # Write final occupancy data for each species to CSV files
   write.csv(df_final,
