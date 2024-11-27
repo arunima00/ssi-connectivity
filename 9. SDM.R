@@ -46,7 +46,7 @@ for (spec in c("SHAL","SHMA","MOFA","MOCA","ANNI")){
   a_coords <- filter(occ,Presence == 0)[,c(1,2)]
   
   # Combine all input data and extract predictor variables for all locations
-  if (spec != "ANNI") {
+  if (spec == "ANNI") {
     data <- prepareSWD(species = spec,
                        p = p_coords,
                        a = a_coords,
@@ -54,7 +54,7 @@ for (spec in c("SHAL","SHMA","MOFA","MOCA","ANNI")){
                        categorical = "clim_zone")
   }
   
-  if (spec == "ANNI") {
+  if (spec != "ANNI") {
     data <- prepareSWD(species = spec,
                        p = p_coords,
                        a = a_coords,
