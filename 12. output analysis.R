@@ -28,14 +28,14 @@ for (y in c("1995","2017")) {
       
       # Get quantiles of raster values
       quantiles <- quantile(values(r), 
-                            probs = seq(0, 1, length.out = 5), 
+                            probs = seq(0, 1, length.out = 6), 
                             na.rm = TRUE)
       
       # Plot the raster with quantile breaks and save as PNG
       png(filename=sub(".tif",".png",i))
       plot(r, 
            breaks = quantiles,
-           col = map.pal("viridis",4), 
+           col = map.pal("viridis",5), 
            mar = c(3.1,3.1,2.1,7.7))
       dev.off()
     }
