@@ -14,6 +14,9 @@ files <- list.files(path = paste0(proj_path,"Omniscape/Output"),
                     full.names = TRUE,
                     recursive = TRUE)
 
+# Exclude unwanted files
+files <- files[! grepl("flow_potential",files)]
+
 # Loop to process each output map
 for (i in files) {
   
