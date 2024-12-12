@@ -33,9 +33,7 @@ for (i in files) {
   r_binned <- rast(cbind(r_df[,c("x","y")],binned),crs = "epsg:4326")
   
   # Write binned raster to TIF file
-  writeRaster(r_binned,
-              filename = sub(".tif","_binned.tif",i),
-              overwrite = TRUE)
+  writeRaster(r_binned,filename = sub(".tif","_binned.tif",i))
 }
 
 # Loop for each species
