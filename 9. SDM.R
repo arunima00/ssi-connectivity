@@ -46,21 +46,11 @@ for (spec in c("SHAL","SHMA","MOFA","MOCA","ANNI")){
   a_coords <- filter(occ,Presence == 0)[,c(1,2)]
   
   # Combine all input data and extract predictor variables for all locations
-  if (spec == "ANNI") {
-    data <- prepareSWD(species = spec,
-                       p = p_coords,
-                       a = a_coords,
-                       env = predictors,
-                       categorical = "clim_zone")
-  }
-  
-  if (spec != "ANNI") {
-    data <- prepareSWD(species = spec,
-                       p = p_coords,
-                       a = a_coords,
-                       env = predictors,
-                       categorical = c("landcov","clim_zone"))
-  }
+  data <- prepareSWD(species = spec,
+                     p = p_coords,
+                     a = a_coords,
+                     env = predictors,
+                     categorical = "clim_zone")
   
   # Split data in training and testing datasets
   c(train, test) %<-% trainValTest(data,
@@ -204,7 +194,7 @@ for (spec in c("SHAL","SHMA","MOFA","MOCA","ANNI")){
   # for each variable and save plots
   
   for (variable in names(predictors)){
-    if (variable %in% c("landcov","clim_zone")){
+    if (variable == "clim_zone"){
       ggplot(df, aes(.data[[variable]], .data[["suitability"]])) +
            geom_violin() +
            ylab("Probability of presence")
