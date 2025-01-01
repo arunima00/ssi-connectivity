@@ -15,10 +15,6 @@ treecov_2020 <- rast(paste0(proj_path,"GIS/Canopy/Tree Cover/treecov_2020_1ha.ti
 ch_2000 <- rast(paste0(proj_path,"GIS/Canopy/Canopy height/2000/canopy height_2000_1ha.tif"))
 ch_2020 <- rast(paste0(proj_path,"GIS/Canopy/Canopy height/2020/canopy height_2020_1ha.tif"))
 
-# Read land cover raster
-lc_2017 <- rast(paste0(proj_path,"GIS/Land cover/2017D/2017D_rast_1ha.tif"))
-lc_1995 <- rast(paste0(proj_path,"GIS/Land cover/1995D/1995D_rast_1ha.tif"))
-
 # Read stack of topographic variable layers
 files_topo <- list.files(paste0(proj_path,"GIS/Derived rasters/Topo variables"),
                          pattern = ".tif$",
@@ -35,8 +31,8 @@ prox <- rast(files_prox)
 clim_zone <- rast(paste0(proj_path,"GIS/Climate zones/clim_zone_1ha.tif"))
 
 # Read grassland cover percentage raster
-ptcover_gland_2017 <- rast(paste0(proj_path,"GIS/Derived rasters/gland_cover_2017.tif"))
-ptcover_gland_1995 <- rast(paste0(proj_path,"GIS/Derived rasters/gland_cover_1995.tif"))
+ptcover_gland_2017 <- rast(paste0(proj_path,"GIS/Derived rasters/Percentage cover/Shola_Grassland_2017.tif"))
+ptcover_gland_1995 <- rast(paste0(proj_path,"GIS/Derived rasters/Percentage cover/Shola_Grassland_1995.tif"))
 
 # Create loop to clip and mask variables for both regions
 for (region in c("nil1400","pahw1400","swg1400")) {
@@ -86,18 +82,6 @@ for (region in c("nil1400","pahw1400","swg1400")) {
                        y = shp,
                        mask = TRUE,
                        filename = paste0(proj_path,"SDM/Input/",region,"_1ha/predictors_all/canopyheight_2020.tif"),
-                       overwrite = TRUE)
-  
-  # Crop and mask land cover layers to specified region and write to TIF files
-  lc_2017_clip <- crop(x = lc_2017,
-                       y = shp,
-                       mask = TRUE,
-                       filename = paste0(proj_path,"SDM/Input/",region,"_1ha/predictors_all/landcov_2017.tif"),
-                       overwrite = TRUE)
-  lc_1995_clip <- crop(x = lc_1995,
-                       y = shp,
-                       mask = TRUE,
-                       filename = paste0(proj_path,"SDM/Input/",region,"_1ha/predictors_all/landcov_1995.tif"),
                        overwrite = TRUE)
   
   # Create vector of output file names for final topographic variable layers
@@ -152,14 +136,12 @@ for (region in c("nil1400","pahw1400","swg1400")) {
   if (region %in% c("nil1400","pahw1400")) {
     predictors_present_f <- c(treecov_2020_clip,
                               ch_2020_clip,
-                              lc_2017_clip,
                               topo_clip,
                               prox_clip[[c(4,6,8)]],
                               clim_zone_clip)
     
     predictors_past_f <- c(treecov_2000_clip,
                            ch_2000_clip,
-                           lc_1995_clip,
                            topo_clip,
                            prox_clip[[c(3,5,7)]],
                            clim_zone_clip)
