@@ -34,6 +34,10 @@ clim_zone <- rast(paste0(proj_path,"GIS/Climate zones/clim_zone_1ha.tif"))
 ptcover_gland_2017 <- rast(paste0(proj_path,"GIS/Derived rasters/Percentage cover/Shola_Grassland_2017.tif"))
 ptcover_gland_1995 <- rast(paste0(proj_path,"GIS/Derived rasters/Percentage cover/Shola_Grassland_1995.tif"))
 
+# Read land cover raster
+landcov_2017 <- rast(paste0(proj_path,"GIS/Land cover/2017D/2017D_rast_1ha.tif"))
+landcov_1995 <- rast(paste0(proj_path,"GIS/Land cover/1995D/1995D_rast_1ha.tif"))
+
 # Create loop to clip and mask variables for both regions
 for (region in c("nil1400","pahw1400","swg1400")) {
   # Read shapefiles based on region
@@ -131,6 +135,18 @@ for (region in c("nil1400","pahw1400","swg1400")) {
                                   mask = TRUE,
                                   filename = paste0(proj_path,"SDM/Input/",region,"_1ha/predictors_all/gland_cover_1995.tif"),
                                   overwrite = TRUE)
+  
+  # Crop and mask land cover layer to specified region and write to TIF file
+  landcov_2017_clip <- crop(x = landcov_2017,
+                            y = shp,
+                            mask = TRUE,
+                            filename = paste0(proj_path,"SDM/Input/",region,"_1ha/predictors_all/landcov_2017.tif"),
+                            overwrite = TRUE)
+  landcov_1995_clip <- crop(x = landcov_1995,
+                            y = shp,
+                            mask = TRUE,
+                            filename = paste0(proj_path,"SDM/Input/",region,"_1ha/predictors_all/landcov_1995.tif"),
+                            overwrite = TRUE)
   
   # Create raster stacks for past and present for forest species variables
   if (region %in% c("nil1400","pahw1400")) {
