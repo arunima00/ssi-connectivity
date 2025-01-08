@@ -26,7 +26,7 @@ names(dem) <- "elevation"
 names(twi) <- "TWI"
 
 # Read reference 1ha resolution raster
-rast_1ha <- rast(paste0(proj_path,"GIS/1ha grids.tif"))
+rast_1ha <- rast(paste0(proj_path,"occupancy data/Jobin/1500 1ha grids/1ha grids.tif"))
 
 # Create loop to derive all topographic variables from DEM and reproject
 for (i in c("aspect","slope","TPI","TRI","roughness")) {
@@ -34,15 +34,23 @@ for (i in c("aspect","slope","TPI","TRI","roughness")) {
   # Derive topographic variable "i"
   topo <- terrain(dem,v = i)
   
-  # Reproject to reference raster and write to TIF file
+  # Reproject to 1ha raster and write to TIF file
   topo_1ha <- project(x = topo,
                       y = rast_1ha,
                       method = "med",
                       filename = paste0(proj_path,"GIS/Derived rasters/Topo variables/",i,"_1ha.tif"),
                       overwrite = TRUE)
+  
+  # Reproject to 25ha resolution and write to TIF file
+  topo_25ha <- project(x = topo,
+                       y = crs(rast_1ha),
+                       method = "med",
+                       res = 500,
+                       filename = paste0(proj_path,"GIS/Derived rasters/Topo variables/",i,"_25ha.tif"),
+                       overwrite = TRUE)
 }
 
-# Reproject DEM and TWI to reference raster and write to TIF file
+# Reproject DEM and TWI to 1ha and 25ha resolutions and write to TIF files
 dem_1ha <- project(x = dem,
                    y = rast_1ha,
                    method = "med",
@@ -53,3 +61,16 @@ twi_1ha <- project(x = twi,
                    method = "med",
                    filename = paste0(proj_path,"GIS/Derived rasters/Topo variables/TWI_1ha.tif"),
                    overwrite = TRUE)
+
+dem_25ha <- project(x = dem,
+                    y = crs(rast_1ha),
+                    method = "med",
+                    res = 500,
+                    filename = paste0(proj_path,"GIS/Derived rasters/Topo variables/elevation_25ha.tif"),
+                    overwrite = TRUE)
+twi_25ha <- project(x = twi,
+                    y = crs(rast_1ha),
+                    method = "med",
+                    res = 500,
+                    filename = paste0(proj_path,"GIS/Derived rasters/Topo variables/TWI_25ha.tif"),
+                    overwrite = TRUE)
