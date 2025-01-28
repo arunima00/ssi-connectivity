@@ -46,10 +46,9 @@ rclmat <- matrix(m, ncol = 2, byrow = TRUE)
 # Reclassify raster
 clim_zone <- classify(clim_zone, rcl = rclmat)
 
-# Convert to categorical raster and setlevels
+# Convert to categorical raster
 levels(clim_zone) <- data.frame(id = 1:28,zone = 1:28)
 
-# Rename layer
 names(clim_zone) <- "clim_zone"
 
 # Read reference 1ha resolution raster
