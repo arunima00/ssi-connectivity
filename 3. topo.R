@@ -21,7 +21,6 @@ proj_path <- "C:/Users/aruni/arunima/IISERTpt/Connectivity/"
 dem <- rast(paste0(proj_path,"GIS/DEM/WGhats_30m_DEM_SRTM.tif"))
 twi <- rast(paste0(proj_path,"GIS/Derived rasters/Topo variables/Extra/TWI merged 30m.tif"))
 
-# Rename layers
 names(dem) <- "elevation"
 names(twi) <- "TWI"
 
