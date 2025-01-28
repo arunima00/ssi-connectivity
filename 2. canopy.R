@@ -13,7 +13,7 @@ ch_2000_2 <- rast(paste0(proj_path,"GIS/Canopy/Canopy height/2000/20N_070E.tif")
 ch_2020_1 <- rast(paste0(proj_path,"GIS/Canopy/Canopy height/2020/10N_070E.tif"))
 ch_2020_2 <- rast(paste0(proj_path,"GIS/Canopy/Canopy height/2020/20N_070E.tif"))
 
-# Merge tiles for each variable
+# Merge tiles
 ch_2000 <- merge(ch_2000_1,ch_2000_2)
 ch_2020 <- merge(ch_2020_1,ch_2020_2)
 
