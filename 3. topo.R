@@ -37,7 +37,7 @@ for (i in c("aspect","slope","TPI","TRI","roughness")) {
   topo_1ha <- project(x = topo,
                       y = rast_1ha,
                       method = "med",
-                      filename = paste0(proj_path,"GIS/Derived rasters/Topo variables/",i,"_1ha.tif"),
+                      filename = paste0(proj_path,"GIS/Derived rasters/Topo variables/1ha/",i,"_1ha.tif"),
                       overwrite = TRUE)
   
   # Reproject to 25ha resolution and write to TIF file
@@ -45,7 +45,7 @@ for (i in c("aspect","slope","TPI","TRI","roughness")) {
                        y = crs(rast_1ha),
                        method = "med",
                        res = 500,
-                       filename = paste0(proj_path,"GIS/Derived rasters/Topo variables/",i,"_25ha.tif"),
+                       filename = paste0(proj_path,"GIS/Derived rasters/Topo variables/25ha/",i,"_25ha.tif"),
                        overwrite = TRUE)
 }
 
@@ -53,23 +53,23 @@ for (i in c("aspect","slope","TPI","TRI","roughness")) {
 dem_1ha <- project(x = dem,
                    y = rast_1ha,
                    method = "med",
-                   filename = paste0(proj_path,"GIS/Derived rasters/Topo variables/elevation_1ha.tif"),
+                   filename = paste0(proj_path,"GIS/Derived rasters/Topo variables/1ha/elevation_1ha.tif"),
                    overwrite = TRUE)
 twi_1ha <- project(x = twi,
                    y = rast_1ha,
                    method = "med",
-                   filename = paste0(proj_path,"GIS/Derived rasters/Topo variables/TWI_1ha.tif"),
+                   filename = paste0(proj_path,"GIS/Derived rasters/Topo variables/1ha/TWI_1ha.tif"),
                    overwrite = TRUE)
 
 dem_25ha <- project(x = dem,
                     y = crs(rast_1ha),
                     method = "med",
                     res = 500,
-                    filename = paste0(proj_path,"GIS/Derived rasters/Topo variables/elevation_25ha.tif"),
+                    filename = paste0(proj_path,"GIS/Derived rasters/Topo variables/25ha/elevation_25ha.tif"),
                     overwrite = TRUE)
 twi_25ha <- project(x = twi,
                     y = crs(rast_1ha),
                     method = "med",
                     res = 500,
-                    filename = paste0(proj_path,"GIS/Derived rasters/Topo variables/TWI_25ha.tif"),
+                    filename = paste0(proj_path,"GIS/Derived rasters/Topo variables/25ha/TWI_25ha.tif"),
                     overwrite = TRUE)
