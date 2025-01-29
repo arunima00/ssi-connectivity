@@ -17,11 +17,10 @@ proj_path <- "C:/Users/aruni/arunima/IISERTpt/Connectivity/"
 # 3. Select georeferenced coordinates as distance units
 # 4. Save output file to directory
 
-# Read distance to Shola forest boundary raster from outside forest patch
+# Read rasters
 prox_shola_2017_temp <- rast(paste0(proj_path,"GIS/Derived rasters/Proximity/Extra/prox_shola_2017_30m_temp.tif"))
 prox_shola_1995_temp <- rast(paste0(proj_path,"GIS/Derived rasters/Proximity/Extra/prox_shola_1995_30m_temp.tif"))
 
-# Read distance to Shola forest boundary raster from inside forest patch
 prox_shola_2017_inv <- rast(paste0(proj_path,"GIS/Derived rasters/Proximity/Extra/prox_shola_2017_30m_inv.tif"))
 prox_shola_1995_inv <- rast(paste0(proj_path,"GIS/Derived rasters/Proximity/Extra/prox_shola_1995_30m_inv.tif"))
 
@@ -51,7 +50,6 @@ prox_shola_1995 <- merge(x = prox_shola_1995_inv,
                          first = TRUE,
                          na.rm = TRUE)
 
-# Rename layer
 names(prox_shola_2017) <- "prox_shola"
 names(prox_shola_1995) <- "prox_shola"
 
@@ -63,7 +61,7 @@ writeRaster(prox_shola_1995,
             filename = paste0(proj_path,"GIS/Derived rasters/Proximity/Extra/prox_shola_1995_30m.tif"),
             overwrite = TRUE)
 
-# Do the same for proximity to woodland
+## Do the same for proximity to woodland
 
 prox_woodland_2017_temp <- rast(paste0(proj_path,"GIS/Derived rasters/Proximity/Extra/prox_woodland_2017_30m_temp.tif"))
 prox_woodland_1995_temp <- rast(paste0(proj_path,"GIS/Derived rasters/Proximity/Extra/prox_woodland_1995_30m_temp.tif"))
@@ -111,7 +109,6 @@ prox_smts_1995 <- rast(paste0(proj_path,"GIS/Derived rasters/Proximity/Extra/pro
 prox_grassland_2017 <- rast(paste0(proj_path,"GIS/Derived rasters/Proximity/Extra/prox_grassland_2017_30m_temp.tif"))
 prox_grassland_1995 <- rast(paste0(proj_path,"GIS/Derived rasters/Proximity/Extra/prox_grassland_1995_30m_temp.tif"))
 
-# Rename layers
 names(prox_smts_2017) <- "prox_settlements"
 names(prox_smts_1995) <- "prox_settlements"
 
@@ -119,9 +116,9 @@ names(prox_grassland_2017) <- "prox_grassland"
 names(prox_grassland_1995) <- "prox_grassland"
 
 # Read reference 1ha resolution raster
-rast_1ha <- rast(paste0(proj_path,"GIS/1ha grids.tif"))
+rast_1ha <- rast(paste0(proj_path,"occupancy data/Jobin/1500 1ha grids/1ha grids.tif"))
 
-# Project all rasters to reference raster and write to TIF files
+# Reproject all rasters and write to TIF files
 prox_shola_2017_1ha <- project(x = prox_shola_2017,
                                y = rast_1ha,
                                method = "med",
@@ -144,16 +141,18 @@ prox_woodland_1995_1ha <- project(x = prox_woodland_1995,
                                   filename = paste0(proj_path,"GIS/Derived rasters/Proximity/prox_woodland_1995_1ha.tif"),
                                   overwrite = TRUE)
 
-prox_grassland_2017_1ha <- project(x = prox_grassland_2017,
-                                   y = rast_1ha,
-                                   method = "med",
-                                   filename = paste0(proj_path,"GIS/Derived rasters/Proximity/prox_grassland_2017_1ha.tif"),
-                                   overwrite = TRUE)
-prox_grassland_1995_1ha <- project(x = prox_grassland_1995,
-                                   y = rast_1ha,
-                                   method = "med",
-                                   filename = paste0(proj_path,"GIS/Derived rasters/Proximity/prox_grassland_1995_1ha.tif"),
-                                   overwrite = TRUE)
+prox_grassland_2017_25ha <- project(x = prox_grassland_2017,
+                                    y = crs(rast_1ha),
+                                    method = "med",
+                                    res = 500,
+                                    filename = paste0(proj_path,"GIS/Derived rasters/Proximity/prox_grassland_2017_25ha.tif"),
+                                    overwrite = TRUE)
+prox_grassland_1995_25ha <- project(x = prox_grassland_1995,
+                                    y = crs(rast_1ha),
+                                    method = "med",
+                                    res = 500,
+                                    filename = paste0(proj_path,"GIS/Derived rasters/Proximity/prox_grassland_1995_25ha.tif"),
+                                    overwrite = TRUE)
 
 prox_smts_2017_1ha <- project(x = prox_smts_2017,
                               y = rast_1ha,
