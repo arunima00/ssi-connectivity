@@ -9,13 +9,13 @@ rm(list = ls())
 proj_path <- "C:/Users/aruni/arunima/IISERTpt/Connectivity/"
 
 # Read occupancy data for forest species to dataframe
-df <- read.csv(paste0(proj_path,"occupancy data/Jobin/clipped_areas_added_w_sites1.csv"))
+df <- read.csv(paste0(proj_path,"occupancy data/Jobin/new dataset forest species.csv"))
 
 # Convert to points layer
 df_vect <- vect(df,geom = c("Longitude","Latitude"),crs = "epsg:4326")
 
 # Read reference 1ha resolution raster
-rast_1ha <- rast(paste0(proj_path,"GIS/1ha grids.tif"))
+rast_1ha <- rast(paste0(proj_path,"occupancy data/Jobin/1500 1ha grids/1ha grids.tif"))
 
 # Reproject to reference CRS
 df_vect <- project(df_vect,y = crs(rast_1ha))
@@ -24,7 +24,7 @@ df_vect <- project(df_vect,y = crs(rast_1ha))
 df <- as.data.frame(df_vect,row.names = NULL,geom = "XY")
 
 # Create loop to separate datasets for each species
-for (i in c("SHAL","SHMA","MOFA","MOCA","ANNI")) {
+for (i in c("SHAL","SHMA","MOFA","MOCA")) {
   
   ## White-bellied Sholakili
   if (i == "SHAL"){
@@ -64,28 +64,6 @@ for (i in c("SHAL","SHMA","MOFA","MOCA","ANNI")) {
     
     # Read shapefile for Nilgiris 1400m contour polygon
     shp <- vect(paste0(proj_path,"GIS/Shapefiles/Nilgiri1400m/Nilgiri1400m.shp"))
-  }
-  
-  ## Nilgiri Pipit
-  if (i == "ANNI"){
-    # Read nilgiri pipit dataset
-    df_anni <- read.csv(paste0(proj_path,"/occupancy data/Jobin/dataset for pipit analysis.csv"))
-    
-    # Convert to points layer
-    df_vect <- vect(df_anni,geom = c("Longitude","Latitude"),crs = "epsg:4326")
-    
-    # Reproject to reference CRS
-    df_vect <- project(df_vect,y = crs(rast_1ha))
-    
-    # Convert back to dataframe
-    df_anni <- as.data.frame(df_vect,row.names = NULL,geom = "XY")
-    
-    # Extract relevant columns only
-    df_sel <- cbind(df_anni[,c("Site","x","y")],
-                    df_anni %>% select(ends_with("ANNI")))
-    
-    # Read shapefile for >1400m contour polygon
-    shp <- vect(paste0(proj_path,"GIS/Shapefiles/SWG1400m/SWG1400m.shp"))
   }
   
   # Reproject shapefile to reference CRS
@@ -143,3 +121,39 @@ for (i in c("SHAL","SHMA","MOFA","MOCA","ANNI")) {
             file = paste0(proj_path,"occupancy data/Jobin/Filtered/",i,".csv"),
             row.names = FALSE)
 }
+
+## Nilgiri Pipit
+
+# Read Nilgiri Pipit dataset
+df_anni <- read.csv(paste0(proj_path,"occupancy data/ANNI/dataset for pipit analysis.csv"))
+
+# Extract relevant columns
+df_sel <- cbind(df_anni[,c("Site","Longitude","Latitude")],
+                df_anni %>% select(ends_with("ANNI")))
+
+# Convert individual counts across 4 replicates per grid to 1/0 presence-absence
+pres<-c()
+for (j in 1:nrow(df_sel)){
+  if (any(df_sel[j,4:7] != 0,na.rm = TRUE)){
+    pres[j] <- 1
+  }
+  if (all(df_sel[j,4:7] == 0,na.rm = TRUE)){
+    pres[j] <- 0
+  } 
+}
+
+# Create new dataframe with grid lat-long and presence/absence
+df_final <- cbind(df_sel[c("Longitude","Latitude")],pres)
+
+# Convert to points layer
+df_vect <- vect(df_final,geom = c("Longitude","Latitude"),crs = "epsg:4326")
+
+# Reproject to reference CRS
+df_vect <- project(df_vect,y = crs(rast_1ha))
+
+# Convert back to dataframe
+df <- as.data.frame(df_vect,row.names = NULL,geom = "XY")
+
+write.csv(df,
+          file = "occupancy data/ANNI/ANNI_filtered.csv",
+          row.names = FALSE)
