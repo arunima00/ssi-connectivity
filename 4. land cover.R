@@ -48,6 +48,9 @@ writeRaster(lc_1995,
 # Read reference 1ha resolution raster
 rast_1ha <- rast(paste0(proj_path,"occupancy data/Jobin/1500 1ha grids/1ha grids.tif"))
 
+# Read reference 25ha raster
+clim_zone <- rast(paste0(proj_path,"GIS/Climate zones/clim_zone_25ha.tif"))
+
 # Project land cover raster to 1ha and 25ha resolution and write to TIF files
 lc_2017_1ha <- project(x = lc_2017,
                        y = rast_1ha,
@@ -61,15 +64,13 @@ lc_1995_1ha <- project(x = lc_1995,
                        overwrite = TRUE)
 
 lc_2017_25ha <- project(x = lc_2017,
-                        y = crs(rast_1ha),
+                        y = clim_zone,
                         method = "near",
-                        res = 500,
                         filename = paste0(proj_path,"GIS/Land cover/2017D/2017D_rast_25ha.tif"),
                         overwrite = TRUE)
 lc_1995_25ha <- project(x = lc_1995,
-                        y = crs(rast_1ha),
+                        y = clim_zone,
                         method = "near",
-                        res = 500,
                         filename = paste0(proj_path,"GIS/Land cover/1995D/1995D_rast_25ha.tif"),
                         overwrite = TRUE)
 
