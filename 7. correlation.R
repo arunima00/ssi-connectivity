@@ -11,12 +11,12 @@ proj_path <- "C:/Users/aruni/arunima/IISERTpt/Connectivity/"
 ## Repeat the following process for all raster stacks for present
 
 # Set region of interest
-#region <- "swg1400"
-region <- "nil1400"
-#region <- "pahw1400"
+#region <- "swg1400_25ha"
+#region <- "nil1400_1ha"
+region <- "pahw1400_1ha"
 
 # Read raster stack
-st <- rast(paste0(proj_path,"SDM/Input/",region,"_1ha/",region,"_predictors_present.tif"))
+st <- rast(paste0(proj_path,"SDM/Input/",region,"/predictors_present.tif"))
 
 # Calculate correlation between all pairs of continuous variables
 stack_corr <- layerCor(st,fun = "pearson",na.rm = TRUE)
@@ -25,12 +25,12 @@ stack_corr <- layerCor(st,fun = "pearson",na.rm = TRUE)
 corr_matrix <- stack_corr$correlation
 
 # Create output folder in directory if does not exist
-if (! dir.exists(paste0(proj_path,"SDM/Input/",region,"_1ha/Correlation"))) {
-  dir.create(paste0(proj_path,"SDM/Input/",region,"_1ha/Correlation"),recursive = TRUE)
+if (! dir.exists(paste0(proj_path,"SDM/Input/",region,"/Correlation"))) {
+  dir.create(paste0(proj_path,"SDM/Input/",region,"/Correlation"),recursive = TRUE)
 }
 
 # Create correlation plot and save as PNG
-png(paste0(proj_path,"SDM/Input/",region,"_1ha/Correlation/",region,"_corrplot.png"))
+png(paste0(proj_path,"SDM/Input/",region,"/Correlation/",region,"_corrplot.png"))
 corrplot(corr_matrix,
          is.corr = FALSE, 
          method = "square",
@@ -55,7 +55,7 @@ df_th <- droplevels(df[abs(df$value) >= 0.7,])
 
 # Write filtered dataframe to CSV file
 write.csv(df,
-          file = paste0(proj_path,"SDM/Input/",region,"_1ha/Correlation/",region,"_correlation.csv"))
+          file = paste0(proj_path,"SDM/Input/",region,"/Correlation/",region,"_correlation.csv"))
 
 # Extract variable names
 all_vars <- names(st)
@@ -64,8 +64,8 @@ all_vars # view all variables
 df_th # view correlated variables
 
 # Remove variables with correlation > 0.7 
-fil_vars <- all_vars[! all_vars %in% c("roughness","slope","canopyheight","elevation","prox_woodland")]
+fil_vars <- all_vars[! all_vars %in% c("roughness","slope","Timber Plantations","Shola Forest")]
 
 # Save list of filtered variable names
 save(fil_vars,
-     file = paste0(proj_path,"SDM/Input/",region,"_1ha/Correlation/",region,"_fil.RData"))
+     file = paste0(proj_path,"SDM/Input/",region,"/Correlation/",region,"_fil.RData"))
