@@ -118,6 +118,9 @@ names(prox_grassland_1995) <- "prox_grassland"
 # Read reference 1ha resolution raster
 rast_1ha <- rast(paste0(proj_path,"occupancy data/Jobin/1500 1ha grids/1ha grids.tif"))
 
+# Read reference 25ha raster
+clim_zone <- rast(paste0(proj_path,"GIS/Climate zones/clim_zone_25ha.tif"))
+
 # Reproject all rasters and write to TIF files
 prox_shola_2017_1ha <- project(x = prox_shola_2017,
                                y = rast_1ha,
@@ -142,15 +145,13 @@ prox_woodland_1995_1ha <- project(x = prox_woodland_1995,
                                   overwrite = TRUE)
 
 prox_grassland_2017_25ha <- project(x = prox_grassland_2017,
-                                    y = crs(rast_1ha),
+                                    y = clim_zone,
                                     method = "med",
-                                    res = 500,
                                     filename = paste0(proj_path,"GIS/Derived rasters/Proximity/prox_grassland_2017_25ha.tif"),
                                     overwrite = TRUE)
 prox_grassland_1995_25ha <- project(x = prox_grassland_1995,
-                                    y = crs(rast_1ha),
+                                    y = clim_zone,
                                     method = "med",
-                                    res = 500,
                                     filename = paste0(proj_path,"GIS/Derived rasters/Proximity/prox_grassland_1995_25ha.tif"),
                                     overwrite = TRUE)
 
