@@ -43,15 +43,17 @@ ch_2020_1ha <- project(x = ch_2020,
                        filename = paste0(proj_path,"GIS/Canopy/Canopy height/2020/canopy height_2020_1ha.tif"),
                        overwrite = TRUE)
 
+# Read reference 25ha raster
+clim_zone <- rast(paste0(proj_path,"GIS/Climate zones/clim_zone_25ha.tif"))
+
+# Reproject canopy height layer to 25ha and write to to TIF file
 ch_2000_25ha <- project(x = ch_2000,
-                        y = crs(rast_1ha),
+                        y = clim_zone,
                         method = "med",
-                        res = 500,
                         filename = paste0(proj_path,"GIS/Canopy/Canopy height/2000/canopy height_2000_25ha.tif"),
                         overwrite = TRUE)
 ch_2020_25ha <- project(x = ch_2020,
-                        y = crs(rast_1ha),
+                        y = clim_zone,
                         method = "med",
-                        res = 500,
                         filename = paste0(proj_path,"GIS/Canopy/Canopy height/2020/canopy height_2020_25ha.tif"),
                         overwrite = TRUE)
