@@ -2,25 +2,41 @@
 using Omniscape, Rasters, Plots
 
 # Loop for each species
-for sdm in ["RF_SHMA_nil1400","RF_SHAL_pahw1400","RF_MOCA_nil1400","RF_MOFA_pahw1400"]
-    
+for sdm in ["SHMA_RF_nil1400_1ha","SHAL_RF_pahw1400_1ha","MOCA_RF_nil1400_1ha","MOFA_RF_pahw1400_1ha","ANNI_RF_swg1400_25ha"]
+
+    if sdm == "ANNI_RF_swg1400_25ha"
+        dist = ["0.5km","1km","1.5km"]
+    else
+        dist = ["0.2km","0.5km","1km"]
+    end
+        
     # Loop for each resistance layer
     for constant in ["c2", "c8"]
-        
+
         # Loop for each dispersal distance value
-        for radius in ["0.2km","0.5km","1km"]
+        for radius in dist
 
             # Loop for each scenario: past and present
             for year in ["1995","2017"]
 
                 # Convert dispersal distance to pixel values
-                if radius == "0.2km"
-                    radius_pixels = string(2)
-                elseif radius == "0.5km"
-                    radius_pixels = string(5)
-                else radius == "1km"
-                    radius_pixels = string(10)
-                end
+                if sdm == "ANNI_RF_swg1400_25ha"
+                    if radius == "0.5km"
+                        radius_pixels = string(1)
+                    elseif radius == "1km"
+                        radius_pixels = string(2)
+                    else radius == "1.5km"
+                        radius_pixels = string(3)
+                    end
+                else
+                    if radius == "0.2km"
+                        radius_pixels = string(2)
+                    elseif radius == "0.5km"
+                        radius_pixels = string(5)
+                    else radius == "1km"
+                        radius_pixels = string(10)
+                    end
+                end                    
 
                 # Read resistance layer
                 res, wkt, transform = Omniscape.read_raster("Input/" * year * "/Resistance layers/" * sdm * "_" * constant * ".tif", Float64)
@@ -44,51 +60,6 @@ for sdm in ["RF_SHMA_nil1400","RF_SHAL_pahw1400","RF_MOCA_nil1400","RF_MOFA_pahw
                                                                 geotransform = transform,
                                                                 write_outputs = true)
             end
-        end
-    end
-end
-
-## For Nilgiri Pipit
-
-# Loop for each resistance layer
-    for constant in ["c2", "c8"]
-        
-        # Loop for each dispersal distance value
-        for radius in ["0.5km","1km","1.5km"]
-
-            # Loop for each scenario: past and present
-            for year in ["1995","2017"]
-
-                # Convert dispersal distance to pixel values
-                if radius == "0.5km"
-                    radius_pixels = string(5)
-                elseif radius == "1km"
-                    radius_pixels = string(10)
-                else radius == "1.5km"
-                    radius_pixels = string(15)
-                end
-
-                # Read resistance layer
-                res, wkt, transform = Omniscape.read_raster("Input/" * year * "/Resistance layers/RF_ANNI_swg1400_" * constant * ".tif", Float64)
-
-                # Set model parameters
-                config = Dict{String, String}(
-                    "radius" => radius_pixels,
-                    "project_name" => "Output/" * year * "/RF_ANNI_swg1400_" * constant * "/" * radius,
-                    "source_from_resistance" => "false",
-                    "source_file" => "Input/" * year * "/Source layers/RF_ANNI_swg1400.tif", 
-                    "calc_normalized_current" => "true",
-                    "calc_flow_potential" => "true",
-                    "write_raw_currmap" => "true",
-                    "mask_nodata" => "true",
-                    "write_as_tif" => "true")
-
-                # Run model and write output maps to TIF files
-                currmap, flow_pot, norm_current = run_omniscape(config,
-                                                                res,
-                                                                wkt = wkt,
-                                                                geotransform = transform,
-                                                                write_outputs = true)
         end
     end
 end
