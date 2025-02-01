@@ -1,8 +1,9 @@
 # Load packages
-library(SDMtune)
-library(zeallot)
 library(tidyverse)
 library(terra)
+library(tuneRanger)
+library(randomForest)
+library(precrec)
 
 # Clear environment 
 rm(list = ls())
@@ -11,241 +12,222 @@ rm(list = ls())
 proj_path <- "C:/Users/aruni/arunima/IISERTpt/Connectivity/"
 
 # Create loop to run SDMs for all species
-for (spec in c("SHAL","SHMA","MOFA","MOCA","ANNI")){
-  ## Set species-specific region
+for (spec in c("SHAL","SHMA","MOFA","MOCA","ANNI")) {
   
-  # Nilgiris
+  # Load species-specific predictor variables
   if (spec %in% c("SHAL","MOFA")){
-    region <- "pahw1400"
+    region <- "pahw1400_1ha"
   }
   
-  # Palani-Anamalai-Highwavies
   if (spec %in% c("SHMA","MOCA")){
-    region <- "nil1400"
+    region <- "nil1400_1ha"
   }
   
-  # Southern Western Ghats
   if (spec == "ANNI"){
-    region <- "swg1400"
+    region <- "swg1400_25ha"
   }
   
-  # Load vector with filtered variables
-  load(paste0(proj_path,"SDM/Input/",region,"_1ha/Correlation/",region,"_fil.RData"))
+  predictors <- rast(paste0(proj_path,"SDM/Input/",region,"/predictors_present.tif"))
   
-  # Read raster stack of predictor variables
-  predictors <- rast(paste0(proj_path,"SDM/Input/",region,"_1ha/",region,"_predictors_present.tif"))
+  # Load filtered variable names
+  load(paste0(proj_path,"SDM/Input/",region,"/Correlation/",region,"_fil.RData"))
   
-  # Filter to get only non-correlated variables
+  # Filter out correlated variables
   predictors <- predictors[[fil_vars]]
   
-  # Load CSV file with occupancy data
-  occ <- read.csv(paste0(proj_path,"occupancy data/Jobin/Filtered/",spec,".csv"))
+  #Load species occurrences
+  occ <- read.csv(paste0(proj_path,"occupancy data/Filtered/",spec,".csv"))
+  occ <- occ[,c("Longitude","Latitude","Presence")]
   
-  # Extract presence and absence locations
-  p_coords <- filter(occ,Presence == 1)[,c(1,2)]
-  a_coords <- filter(occ,Presence == 0)[,c(1,2)]
+  # Convert to SpatVector of points
+  occ_vect <- vect(occ,geom = c("Longitude","Latitude"),crs = crs(predictors))
   
-  # Combine all input data and extract predictor variables for all locations
-  data <- prepareSWD(species = spec,
-                     p = p_coords,
-                     a = a_coords,
-                     env = predictors,
-                     categorical = "clim_zone")
+  # Get data table
+  df <- terra::extract(predictors,occ_vect,ID = FALSE,bind = TRUE)
+  df <- as.data.frame(df,geom = "XY") %>% na.omit()
   
-  # Split data in training and testing datasets
-  c(train, test) %<-% trainValTest(data,
-                                   test = 0.2,
-                                   seed = 25)
+  if (spec == "ANNI") {
+    
+    df_temp <- filter(df,Presence == 1)
+    occ_vect <- occ_vect[occ_vect$Presence == 1]
+    
+    # Generate randomly sampled pseudo-absences with spatial exclusion
+    BiomodData <- biomod2::BIOMOD_FormatingData(resp.name = spec,
+                                                resp.var = occ_vect,
+                                                expl.var = predictors,
+                                                PA.nb.rep = 1,
+                                                PA.nb.absences = nrow(df_temp)*10,
+                                                PA.strategy = "disk",
+                                                PA.dist.min = 1500,
+                                                na.rm = TRUE,
+                                                filter.raster = TRUE,
+                                                seed.val = 25)
+    
+    BiomodData@data.species[is.na(BiomodData@data.species)] <- 0
+    
+    df <- data.frame(Presence = BiomodData@data.species,
+                     BiomodData@data.env.var,
+                     BiomodData@coord)
+  }
+  
+  # Stratified sampling on presence-absence data
+  set.seed(25)
+  train_index <- caret::createDataPartition(df$Presence,p = 0.8,list = FALSE)
+  
+  df$Presence <- as.factor(df$Presence)
+  
+  train <- df[train_index,c("Presence",fil_vars)]
+  test  <- df[-train_index,c("Presence",fil_vars)]
   
   # Create output folder in directory if does not exist
-  if (!dir.exists(paste0(proj_path,"SDM/Output/",spec))){
-    dir.create(paste0(proj_path,"SDM/Output/",spec),recursive = TRUE)
+  if (!dir.exists(paste0(proj_path,"SDM/Output/Datasets"))){
+    dir.create(paste0(proj_path,"SDM/Output/Datasets"),recursive = TRUE)
   }
   
   # Save training and testing datasets
-  swd2csv(train, file_name = paste0(proj_path,"SDM/Output/",spec,"/",spec,"_",region,"_train.csv"))
-  swd2csv(test, file_name = paste0(proj_path,"SDM/Output/",spec,"/",spec,"_",region,"_test.csv"))
+  write.csv(train, 
+            file = paste0(proj_path,"SDM/Output/Datasets/",spec,"_",region,"_train.csv"),
+            row.names = FALSE)
+  write.csv(test, 
+            file = paste0(proj_path,"SDM/Output/Datasets/",spec,"_",region,"_test.csv"),
+            row.names = FALSE)
   
-  # Create folds
-  folds <- randomFolds(train,
-                       k = 10,
-                       seed = 25)
+  # Creating mlr task
+  mlr.task <- mlr::makeClassifTask(data = train, target = "Presence")
   
-  # Train preliminary model using training dataset and cross-validation
+  # Tuning hyperparameters
   set.seed(25)
-  model <- train ("RF",
-                  data = train,
-                  folds = folds)
+  res <- tuneRanger(mlr.task,tune.parameters = c("mtry","min.node.size"))
   
-  # Set hyperparameter value ranges for tuning
-  h <- list(mtry = floor(sqrt(nlyr(predictors))),
-            ntree = 100:1000,
-            nodesize = 1:20)
+  # Mean of best 5 % of the results
+  res
   
-  # Train models with multiple hyperparameter values to get best model
-  om <- optimizeModel(model,
-                      hypers = h,
-                      env = predictors,
-                      metric = "tss",
-                      test = test,
-                      seed = 25)
+  if (spec != "ANNI") {
+    set.seed(25)
+    rf <- randomForest(formula = as.factor(train$Presence) ~.,
+                       data = train,
+                       ntree = 1000,
+                       mtry = res$recommended.pars[["mtry"]],
+                       nodesize = res$recommended.pars[["min.node.size"]])
+  }
   
-  # View best model hyperparameter values
-  om@results[1, ]
-  
-  # Combine all cross-validated models and retrain using best model hyperparameters
-  set.seed(25)
-  final_model <- combineCV(om@models[[1]])
+  if (spec == "ANNI") {
+    
+    prNum <- as.numeric(table(train$Presence)["1"]) # number of presences
+    bgNum <- as.numeric(table(train$Presence)["0"]) # number of backgrounds
+    
+    # the sample size in each class; the same as presence number
+    smpsize <- c("0" = prNum, "1" = prNum)
+    
+    set.seed(25)
+    rf <- randomForest(formula = as.factor(train$Presence) ~.,
+                       data = train,
+                       ntree = 1000,
+                       mtry = res$recommended.pars[["mtry"]],
+                       sampsize = smpsize,
+                       nodesize = res$recommended.pars[["min.node.size"]],
+                       replace = TRUE)
+  } 
   
   # Create output folder in directory if does not exist
-  if (! dir.exists(paste0(proj_path,"SDM/Output/",spec,"/Models"))){
-    dir.create(paste0(proj_path,"SDM/Output/",spec,"/Models"),recursive = TRUE)
+  if (! dir.exists(paste0(proj_path,"SDM/Output/Models"))){
+    dir.create(paste0(proj_path,"SDM/Output/Models"),recursive = TRUE)
   }
   
   # Save model
-  saveRDS(final_model,file = paste0(proj_path,"SDM/Output/",spec,"/Models/RF_",spec,"_",region,".rds"))
+  saveRDS(rf,file = paste0(proj_path,"SDM/Output/Models/",spec,"_RF_",region,".rds"))
+  
+  # predict with RF and RF down-sampled
+  rfpred <- predict(rf,test[,fil_vars],type = "prob")[,"1"]
+  
+  plot(rf,main = "RF")
+  
+  # calculate area under the ROC and PR curves
+  precrec_obj <- evalmod(scores = rfpred,labels = test[,"Presence"])
+  precrec_obj
   
   # Create output folder in directory if does not exist
-  if (! dir.exists(paste0(proj_path,"SDM/Output/",spec,"/ROCs"))){
-    dir.create(paste0(proj_path,"SDM/Output/",spec,"/ROCs"),recursive = TRUE)
+  if (! dir.exists(paste0(proj_path,"SDM/Output/Evaluation curves"))){
+    dir.create(paste0(proj_path,"SDM/Output/Evaluation curves"),recursive = TRUE)
   }
   
-  # Evaluate model
-  auc(final_model)
-  tss(final_model)
-  
-  # Plot ROC curve and save plot
-  plotROC(final_model, 
-          test = test)
-  ggsave(paste0(proj_path,"SDM/Output/",spec,"/ROCs/RF_",spec,"_",region,".png"),
+  # plot the ROC and PR curves
+  autoplot(precrec_obj)
+  ggsave(paste0(proj_path,"SDM/Output/Evaluation curves/",spec,"_RF_",region,".png"),
          bg = "white")
   
   # Create output folder in directory if does not exist
-  if (! dir.exists(paste0(proj_path,"SDM/Output/",spec,"/Prediction"))){
-    dir.create(paste0(proj_path,"SDM/Output/",spec,"/Prediction"),recursive = TRUE)
+  if (! dir.exists(paste0(proj_path,"SDM/Output/Variable importance"))){
+    dir.create(paste0(proj_path,"SDM/Output/Variable importance"),recursive = TRUE)
   }
   
-  # Project prediction to entire region and save output raster
-  map <- predict(final_model, 
-                 data = predictors,
-                 filename = paste0(proj_path,"SDM/Output/",spec,"/Prediction/RF_",spec,"_",region,".tif"),
-                 overwrite = TRUE)
-  
-  # Plot output raster and save plot
-  plotPred(map, 
-           lt = "Habitat\nsuitability",
-           hr = TRUE)
-  ggsave(paste0(proj_path,"SDM/Output/",spec,"/Prediction/RF_",spec,"_",region,".png"),
-         bg = "white")
-  
-  # Find optimal thresholds for model to split into binary values
-  ths <- thresholds(final_model)
+  png(filename = paste0(proj_path,"SDM/Output/Variable importance/",spec,"_RF_",region,".png"))
+  varImpPlot(rf)
+  dev.off()
   
   # Create output folder in directory if does not exist
-  if (! dir.exists(paste0(proj_path,"SDM/Output/",spec,"/PA map"))){
-    dir.create(paste0(proj_path,"SDM/Output/",spec,"/PA map"),recursive = TRUE)
-  }
-  
-  # Create and plot binary presence-absence raster and save 
-  plotPA(map, 
-         th = ths[3, 2], 
-         filename = paste0(proj_path,"SDM/Output/",spec,"/PA map/RF_",spec,"_",region,".tif"), 
-         format = "GTiff",
-         overwrite = TRUE,
-         hr = TRUE)
-  ggsave(paste0(proj_path,"SDM/Output/",spec,"/PA map/RF_",spec,"_",region,".png"),bg="white")
-  
-  # Compute variable importance for final model
-  vi <- varImp(final_model)
-  
-  # Create output folder in directory if does not exist
-  if (! dir.exists(paste0(proj_path,"SDM/Output/",spec,"/Variable importance"))){
-    dir.create(paste0(proj_path,"SDM/Output/",spec,"/Variable importance"),
+  if (! dir.exists(paste0(proj_path,"SDM/Output/Partial dependence plots/",spec,"_RF_",region))){
+    dir.create(paste0(proj_path,"SDM/Output/Partial dependence plots/",spec,"_RF_",region),
                recursive = TRUE)
   }
   
-  # Plot variable importance and save plot
-  plotVarImp(vi)
-  ggsave(paste0(proj_path,"SDM/Output/",spec,"/Variable importance/RF_",spec,"_",region,".png"),
-         bg = "white")
-  
-  # Create output folder in directory if does not exist
-  if (! dir.exists(paste0(proj_path,"SDM/Output/",spec,"/Response plots/RF_",spec,"_",region))){
-    dir.create(paste0(proj_path,"SDM/Output/",spec,"/Response plots/RF_",spec,"_",region),
-               recursive = TRUE)
-  }
-  
-  # Convert prediction raster to dataframe
-  sdm_df <- as.data.frame(map,xy = TRUE,na.rm = TRUE)
-  
-  # Convert predictor variables to dataframe
-  predictors_df <- as.data.frame(predictors,xy = TRUE,na.rm = TRUE)
-  
-  # Combine both dataframes and remove NAs
-  df <- merge(x = sdm_df,
-              y = predictors_df,
-              by = c("x","y"),
-              all.x = T) %>% na.omit()
-  
-  # Rename column
-  colnames(df)[3] <- "suitability"
-  
-  # Plot predicted probability of presence vs. predictor variables 
-  # for each variable and save plots
-  
-  for (variable in names(predictors)){
-    if (variable == "clim_zone"){
-      ggplot(df, aes(.data[[variable]], .data[["suitability"]])) +
-           geom_violin() +
-           ylab("Probability of presence")
-    }
-    else {
-      ggplot(df, aes(.data[[variable]], .data[["suitability"]])) +
-           geom_smooth() +
-           ylab("Probability of presence")
-    }
-    ggsave(paste0(proj_path,"SDM/Output/",spec,"/Response plots/RF_",spec,"_",region,"/",variable,".png"),
-           bg = "white")
-  }
-  
-  # Read past predictor variables raster stack
-  predictors_past <- rast(paste0(proj_path,"SDM/Input/",region,"_1ha/",region,"_predictors_past.tif"))
-  
-  # Filter out unused variables
-  predictors_past <- predictors_past[[fil_vars]]
+  for (i in seq_along(fil_vars)){
     
-  # Create output folder in directory if does not exist
-  if (! dir.exists(paste0(proj_path,"SDM/Output/",spec,"/Past prediction"))){
-    dir.create(paste0(proj_path,"SDM/Output/",spec,"/Past prediction"),
-               recursive = TRUE)
+    png(filename = paste0(proj_path,"SDM/Output/Partial dependence plots/",spec,"_RF_",region,"/",fil_vars[i],".png"))
+    partialPlot(x = rf,
+                pred.data = train,
+                x.var = fil_vars[i],
+                xlab = fil_vars[i],
+                main = paste("Partial Dependence on", fil_vars[i]),
+                which.class = "1")
+    dev.off()
   }
   
-  # Project prediction to past
-  map_past <- predict(final_model,
-                      data = predictors_past,
-                      file = paste0(proj_path,"SDM/Output/",spec,"/Past prediction/RF_",spec,"_",region,".tif"),
-                      overwrite = TRUE)
+  env_present <- as.data.frame(predictors,xy = TRUE,na.rm = FALSE)
   
-  # Plot prediction for past and save plot
-  plotPred(map_past,
-           lt = "Habitat\nsuitability",
-           hr = TRUE)
-  ggsave(paste0(proj_path,"SDM/Output/",spec,"/Past prediction/RF_",spec,"_",region,".png"),
-         bg = "white")
+  pred_present <- predict(rf,env_present[,fil_vars],type = "prob")[,"1"]
+  
+  present_df <- cbind(env_present[,c("x","y")],pred_present)
+  
+  present_rast <- rast(present_df,
+                       type = "xyz", 
+                       crs = crs(predictors), 
+                       extent = ext(predictors))
   
   # Create output folder in directory if does not exist
-  if (! dir.exists(paste0(proj_path,"SDM/Output/",spec,"/Past PA map"))){
-    dir.create(paste0(proj_path,"SDM/Output/",spec,"/Past PA map"),
-               recursive = TRUE)
+  if (! dir.exists(paste0(proj_path,"SDM/Output/Prediction"))){
+    dir.create(paste0(proj_path,"SDM/Output/Prediction"),recursive = TRUE)
   }
   
-  # Create and plot presence-absence raster for past scenario and save
-  plotPA(map_past,
-         th = ths[3, 2],
-         filename = paste0(proj_path,"SDM/Output/",spec,"/Past PA map/RF_",spec,"_",region,".tif"),
-         format = "GTiff",
-         overwrite = TRUE,
-         hr = TRUE)
-  ggsave(paste0(proj_path,"SDM/Output/",spec,"/Past PA map/RF_",spec,"_",region,".png"),
-         bg = "white")
+  png(filename = paste0(proj_path,"SDM/Output/Prediction/",spec,"_RF_",region,".png"))
+  plot(present_rast)
+  dev.off()
+  
+  writeRaster(present_rast,
+              file = paste0(proj_path,"SDM/Output/Prediction/",spec,"_RF_",region,".tif"),
+              overwrite = TRUE)
+  
+  predictors_past <- rast(paste0(proj_path,"SDM/Input/",region,"/predictors_past.tif"))
+  predictors_past <- predictors_past[[fil_vars]]
+  
+  env_past <- as.data.frame(predictors_past,xy = TRUE,na.rm = FALSE)
+  
+  pred_past <- predict(rf,env_past[,fil_vars],type = "prob")[,"1"]
+  
+  past_df <- cbind(env_past[,c("x","y")],pred_past)
+  
+  past_rast <- rast(past_df,type = "xyz",crs = crs(predictors_past),extent = ext(predictors_past))
+  
+  # Create output folder in directory if does not exist
+  if (! dir.exists(paste0(proj_path,"SDM/Output/Past prediction"))){
+    dir.create(paste0(proj_path,"SDM/Output/Past prediction"),recursive = TRUE)
+  }
+  
+  png(filename = paste0(proj_path,"SDM/Output/Past prediction/",spec,"_RF_",region,".png"))
+  plot(past_rast)
+  dev.off()
+  
+  writeRaster(past_rast,
+              file = paste0(proj_path,"SDM/Output/Past prediction/",spec,"_RF_",region,".tif"),
+              overwrite = TRUE)
 }
