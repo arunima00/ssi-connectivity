@@ -48,12 +48,16 @@ for (region in c("nil1400_1ha","pahw1400_1ha","swg1400_25ha")) {
     clim_zone <- rast(paste0(proj_path,"GIS/Climate zones/clim_zone_1ha.tif"))
     
     # Read land cover raster stacks
-    landcov_2017 <- c(rast(paste0(proj_path,"GIS/Derived rasters/cover_2017_1ha/Shola Forest.tif")),
-                      rast(paste0(proj_path,"GIS/Derived rasters/cover_2017_1ha/Timber Plantations.tif")),
-                      rast(paste0(proj_path,"GIS/Derived rasters/cover_2017_1ha/Shola Forest_Timber.tif")))
-    landcov_1995 <- c(rast(paste0(proj_path,"GIS/Derived rasters/cover_1995_1ha/Shola Forest.tif")),
-                      rast(paste0(proj_path,"GIS/Derived rasters/cover_1995_1ha/Timber Plantations.tif")),
-                      rast(paste0(proj_path,"GIS/Derived rasters/cover_1995_1ha/Shola Forest_Timber.tif")))
+    landcov_2017 <- c(rast(paste0(proj_path,"GIS/Derived rasters/cover_2017_1ha/Shola_Forest.tif")),
+                      rast(paste0(proj_path,"GIS/Derived rasters/cover_2017_1ha/Timber_Plantations.tif")),
+                      rast(paste0(proj_path,"GIS/Derived rasters/cover_2017_1ha/Woodland.tif")))
+    landcov_1995 <- c(rast(paste0(proj_path,"GIS/Derived rasters/cover_1995_1ha/Shola_Forest.tif")),
+                      rast(paste0(proj_path,"GIS/Derived rasters/cover_1995_1ha/Timber_Plantations.tif")),
+                      rast(paste0(proj_path,"GIS/Derived rasters/cover_1995_1ha/Woodland.tif")))
+    
+    # Read categorical land cover rasters
+    landcov_2017_cat <- rast(paste0(proj_path,"GIS/Land cover/2017D/2017D_rast_1ha.tif"))
+    landcov_1995_cat <- rast(paste0(proj_path,"GIS/Land cover/1995D/1995D_rast_1ha.tif"))
   }
   
   if (region == "swg1400_25ha") {
@@ -76,8 +80,12 @@ for (region in c("nil1400_1ha","pahw1400_1ha","swg1400_25ha")) {
     clim_zone <- rast(paste0(proj_path,"GIS/Climate zones/clim_zone_25ha.tif"))
     
     # Read grassland cover raster layers
-    landcov_2017 <- rast(paste0(proj_path,"GIS/Derived rasters/cover_2017_25ha/Shola Grassland.tif"))
-    landcov_1995 <- rast(paste0(proj_path,"GIS/Derived rasters/cover_1995_25ha/Shola Grassland.tif"))
+    landcov_2017 <- rast(paste0(proj_path,"GIS/Derived rasters/cover_2017_25ha/Shola_Grassland.tif"))
+    landcov_1995 <- rast(paste0(proj_path,"GIS/Derived rasters/cover_1995_25ha/Shola_Grassland.tif"))
+    
+    # Read categorical land cover rasters
+    landcov_2017_cat <- rast(paste0(proj_path,"GIS/Land cover/2017D/2017D_rast_25ha.tif"))
+    landcov_1995_cat <- rast(paste0(proj_path,"GIS/Land cover/1995D/1995D_rast_25ha.tif"))
   }
   
   # Reproject shapefile to project CRS
@@ -163,6 +171,19 @@ for (region in c("nil1400_1ha","pahw1400_1ha","swg1400_25ha")) {
   # Write cropped and masked layers to output TIF files
   writeRaster(landcov_2017_clip,filename = output_paths_2017,overwrite = TRUE)
   writeRaster(landcov_1995_clip,filename = output_paths_1995,overwrite = TRUE)
+  
+  # Write cropped and masked categorical land cover rasters to TIF files
+  landcov_2017_cat_clip <- crop(x = landcov_2017_cat,
+                                y = shp,
+                                mask = TRUE,
+                                filename = paste0(proj_path,"SDM/Input/",region,"/predictors_all/landcov_2017.tif"),
+                                overwrite = TRUE)
+  
+  landcov_1995_cat_clip <- crop(x = landcov_1995_cat,
+                                y = shp,
+                                mask = TRUE,
+                                filename = paste0(proj_path,"SDM/Input/",region,"/predictors_all/landcov_1995.tif"),
+                                overwrite = TRUE)
   
   # Create raster stacks for past and present
   predictors_present <- c(ch_2020_clip,
