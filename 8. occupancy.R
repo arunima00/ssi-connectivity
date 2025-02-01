@@ -9,13 +9,13 @@ rm(list = ls())
 proj_path <- "C:/Users/aruni/arunima/IISERTpt/Connectivity/"
 
 # Read occupancy data for forest species to dataframe
-df <- read.csv(paste0(proj_path,"occupancy data/Jobin/new dataset forest species.csv"))
+df <- read.csv(paste0(proj_path,"occupancy data/new dataset forest species.csv"))
 
 # Convert to points layer
 df_vect <- vect(df,geom = c("Longitude","Latitude"),crs = "epsg:4326")
 
 # Read reference 1ha resolution raster
-rast_1ha <- rast(paste0(proj_path,"occupancy data/Jobin/1500 1ha grids/1ha grids.tif"))
+rast_1ha <- rast(paste0(proj_path,"occupancy data/1500 1ha grids/1ha grids.tif"))
 
 # Reproject to reference CRS
 df_vect <- project(df_vect,y = crs(rast_1ha))
@@ -118,14 +118,14 @@ for (i in c("SHAL","SHMA","MOFA","MOCA")) {
 
   # Write final occupancy data for each species to CSV files
   write.csv(df_final,
-            file = paste0(proj_path,"occupancy data/Jobin/Filtered/",i,".csv"),
+            file = paste0(proj_path,"occupancy data/Filtered/",i,".csv"),
             row.names = FALSE)
 }
 
 ## Nilgiri Pipit
 
 # Read Nilgiri Pipit dataset
-df_anni <- read.csv(paste0(proj_path,"occupancy data/ANNI/dataset for pipit analysis.csv"))
+df_anni <- read.csv(paste0(proj_path,"occupancy data/dataset for pipit analysis.csv"))
 
 # Extract relevant columns
 df_sel <- cbind(df_anni[,c("Site","Longitude","Latitude")],
@@ -154,6 +154,8 @@ df_vect <- project(df_vect,y = crs(rast_1ha))
 # Convert back to dataframe
 df <- as.data.frame(df_vect,row.names = NULL,geom = "XY")
 
+colnames(df) <- c("Presence","Longitude","Latitude")
+
 write.csv(df,
-          file = "occupancy data/ANNI/ANNI_filtered.csv",
+          file = "occupancy data/Filtered/ANNI.csv",
           row.names = FALSE)
