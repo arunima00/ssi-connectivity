@@ -95,26 +95,70 @@ writeVector(lc_1995_vect,
             filename = paste0(proj_path,"GIS/Land cover/1995D/1995D vectorised/1995D.shp"),
             overwrite = TRUE)
 
+for (res in c("1ha","25ha")) {
+  for (year in c("1995","2017")) {
+    if (year == "1995") {
+      
+      lc_vect <- lc_1995_vect
+      
+      if (res == "1ha") {
+        lc_grid <- lc_1995_1ha
+      }
+      if (res == "25ha") {
+        lc_grid <- lc_1995_25ha
+      }
+    }
+    
+    if (year == "2017") {
+      
+      lc_vect <- lc_2017_vect
+      
+      if (res == "1ha") {
+        lc_grid <- lc_2017_1ha
+      }
+      if (res == "25ha") {
+        lc_grid <- lc_2017_25ha
+      }
+    }
+    
+    # Get fraction cover for each land cover class
+    cover <- rasterize(lc_vect,
+                       lc_grid,
+                       field = "landcov",
+                       fun = "mean",
+                       cover = TRUE,
+                       update = TRUE,
+                       by = "landcov")
+    
+    names(cover) <- gsub(" ","_",names(cover))
+    
+    # Convert to percentage
+    cover <- cover * 100
+    
+    # Set background pixels to 0
+    cover[is.na(cover)] <- 0
+    
+    # Create list of file names
+    output_paths <- c()
+    
+    if (! dir.exists(paste0(proj_path,"GIS/Derived rasters/cover_",year,"_",res))) {
+      dir.create(paste0(proj_path,"GIS/Derived rasters/cover_",year,"_",res),recursive = TRUE)
+    }
+    
+    for (i in names(cover)){
+      output_paths <- c(output_paths,paste0(proj_path,"GIS/Derived rasters/cover_",year,"_",res,"/",i,".tif"))
+    }
+    
+    # Write rasters to TIF files
+    writeRaster(cover,filename = output_paths,overwrite = TRUE)
+  }
+}
+
+# Extract Shola Forest and Timber plantation polygons
 lc_2017_woodland <- lc_2017_vect[lc_2017_vect$landcov %in% c("Shola Forest","Timber Plantations")]
 lc_1995_woodland <- lc_1995_vect[lc_1995_vect$landcov %in% c("Shola Forest","Timber Plantations")]
 
-# Get fraction cover for each land cover class for each 1ha and 25ha pixel
-cover_2017_1ha <- rasterize(lc_2017_vect,
-                            lc_2017_1ha,
-                            field = "landcov",
-                            fun = "mean",
-                            cover = TRUE,
-                            update = TRUE,
-                            by = "landcov")
-
-cover_1995_1ha <- rasterize(lc_1995_vect,
-                            lc_1995_1ha,
-                            field = "landcov",
-                            fun = "mean",
-                            cover = TRUE,
-                            update = TRUE,
-                            by = "landcov")
-
+# Derive woodland cover in the same way
 wland_2017_1ha <- rasterize(lc_2017_woodland,
                             lc_2017_1ha,
                             field = "landcov",
@@ -129,99 +173,18 @@ wland_1995_1ha <- rasterize(lc_1995_woodland,
                             cover = TRUE,
                             update = TRUE)
 
-cover_2017_25ha <- rasterize(lc_2017_vect,
-                             lc_2017_25ha,
-                             field = "landcov",
-                             fun = "mean",
-                             cover = TRUE,
-                             update = TRUE,
-                             by = "landcov")
-
-cover_1995_25ha <- rasterize(lc_1995_vect,
-                             lc_1995_25ha,
-                             field = "landcov",
-                             fun = "mean",
-                             cover = TRUE,
-                             update = TRUE,
-                             by = "landcov")
-
-# Convert to percentage
-cover_2017_1ha <- cover_2017_1ha * 100
-cover_1995_1ha <- cover_1995_1ha * 100
-
 wland_2017_1ha <- wland_2017_1ha * 100
 wland_1995_1ha <- wland_1995_1ha * 100
-
-cover_2017_25ha <- cover_2017_25ha * 100
-cover_1995_25ha <- cover_1995_25ha * 100
-
-# Set background pixels to 0
-cover_2017_1ha[is.na(cover_2017_1ha)] <- 0
-cover_1995_1ha[is.na(cover_1995_1ha)] <- 0
 
 wland_2017_1ha[is.na(wland_2017_1ha)] <- 0
 wland_1995_1ha[is.na(wland_1995_1ha)] <- 0
 
-cover_2017_25ha[is.na(cover_2017_25ha)] <- 0
-cover_1995_25ha[is.na(cover_1995_25ha)] <- 0
-
-# Create list of file names
-output_paths_2017_1ha <- c()
-output_paths_1995_1ha <- c()
-output_paths_2017_25ha <- c()
-output_paths_1995_25ha <- c()
-
 names(wland_2017_1ha) <- "Woodland"
 names(wland_1995_1ha) <- "Woodland"
 
-if (! dir.exists(paste0(proj_path,"GIS/Derived rasters/cover_2017_1ha"))) {
-  dir.create(paste0(proj_path,"GIS/Derived rasters/cover_2017_1ha"),recursive = TRUE)
-}
-
-if (! dir.exists(paste0(proj_path,"GIS/Derived rasters/cover_1995_1ha"))) {
-  dir.create(paste0(proj_path,"GIS/Derived rasters/cover_1995_1ha"),recursive = TRUE)
-}
-
-if (! dir.exists(paste0(proj_path,"GIS/Derived rasters/cover_2017_25ha"))) {
-  dir.create(paste0(proj_path,"GIS/Derived rasters/cover_2017_25ha"),recursive = TRUE)
-}
-
-if (! dir.exists(paste0(proj_path,"GIS/Derived rasters/cover_1995_25ha"))) {
-  dir.create(paste0(proj_path,"GIS/Derived rasters/cover_1995_25ha"),recursive = TRUE)
-}
-
-for (i in names(cover_2017_1ha)){
-  output_paths_2017_1ha <- c(output_paths_2017_1ha,
-                             paste0(proj_path,"GIS/Derived rasters/cover_2017_1ha/",i,".tif"))
-  output_paths_1995_1ha <- c(output_paths_1995_1ha,
-                             paste0(proj_path,"GIS/Derived rasters/cover_1995_1ha/",i,".tif"))
-  output_paths_2017_25ha <- c(output_paths_2017_25ha,
-                              paste0(proj_path,"GIS/Derived rasters/cover_2017_25ha/",i,".tif"))
-  output_paths_1995_25ha <- c(output_paths_1995_25ha,
-                              paste0(proj_path,"GIS/Derived rasters/cover_1995_25ha/",i,".tif"))
-}
-
-# Write rasters to TIF files
-writeRaster(cover_2017_1ha,
-            filename = output_paths_2017_1ha,
-            overwrite = TRUE)
-
-writeRaster(cover_1995_1ha,
-            filename = output_paths_1995_1ha,
-            overwrite = TRUE)
-
 writeRaster(wland_2017_1ha,
-            filename = paste0(proj_path,"GIS/Derived rasters/cover_2017_1ha/Shola Forest_Timber.tif"),
+            filename = paste0(proj_path,"GIS/Derived rasters/cover_2017_1ha/Woodland.tif"),
             overwrite = TRUE)
-
 writeRaster(wland_1995_1ha,
-            filename = paste0(proj_path,"GIS/Derived rasters/cover_1995_1ha/Shola Forest_Timber.tif"),
-            overwrite = TRUE)
-
-writeRaster(cover_2017_25ha,
-            filename = output_paths_2017_25ha,
-            overwrite = TRUE)
-
-writeRaster(cover_1995_25ha,
-            filename = output_paths_1995_25ha,
+            filename = paste0(proj_path,"GIS/Derived rasters/cover_1995_1ha/Woodland.tif"),
             overwrite = TRUE)
