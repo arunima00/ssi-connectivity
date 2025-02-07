@@ -2,9 +2,9 @@
 using Omniscape, Rasters, Plots
 
 # Loop for each species
-for sdm in ["SHMA_RF_nil1400_1ha","SHAL_RF_pahw1400_1ha","MOCA_RF_nil1400_1ha","MOFA_RF_pahw1400_1ha","ANNI_RF_swg1400_25ha"]
+for sdm in ["SHMA_RF_nil1400_1ha","SHAL_RF_pa1400_1ha","MOCA_RF_nil1400_1ha","MOFA_RF_pa1400_1ha","ANNI_RF_nilpa1400_25ha","EUAL_RF_nilpa1400_1ha","FINI_RF_nilpa1400_1ha"]
 
-    if sdm == "ANNI_RF_swg1400_25ha"
+    if sdm == "ANNI_RF_nilpa1400_25ha" || sdm == "EUAL_RF_nilpa1400_1ha"
         dist = ["0.5km","1km","1.5km"]
     else
         dist = ["0.2km","0.5km","1km"]
@@ -20,7 +20,7 @@ for sdm in ["SHMA_RF_nil1400_1ha","SHAL_RF_pahw1400_1ha","MOCA_RF_nil1400_1ha","
             for year in ["1995","2017"]
 
                 # Convert dispersal distance to pixel values
-                if sdm == "ANNI_RF_swg1400_25ha"
+                if sdm == "ANNI_RF_nilpa1400_25ha"
                     if radius == "0.5km"
                         radius_pixels = string(1)
                     elseif radius == "1km"
@@ -33,8 +33,10 @@ for sdm in ["SHMA_RF_nil1400_1ha","SHAL_RF_pahw1400_1ha","MOCA_RF_nil1400_1ha","
                         radius_pixels = string(2)
                     elseif radius == "0.5km"
                         radius_pixels = string(5)
-                    else radius == "1km"
+                    elseif radius == "1km"
                         radius_pixels = string(10)
+                    else radius == "1.5km"
+                        radius_pixels = string(15)
                     end
                 end                    
 
