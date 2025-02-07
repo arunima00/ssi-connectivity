@@ -8,22 +8,33 @@ rm(list = ls())
 proj_path <- "C:/Users/aruni/arunima/IISERTpt/Connectivity/"
 
 # Create loop to clip and mask variables for all three regions
-for (region in c("nil1400_1ha","pahw1400_1ha","swg1400_25ha")) {
+for (region in c("nil1400_1ha","pa1400_1ha","nilpa1400_25ha","nilpa1400_1ha")) {
   
   # Read shapefiles based on region
   if (region == "nil1400_1ha") {
     shp <- vect(paste0(proj_path,"GIS/Shapefiles/Nilgiri1400m/Nilgiri1400m.shp"))
   }
   
-  if (region == "pahw1400_1ha") {
-    shp <- vect(paste0(proj_path,"GIS/Shapefiles/PA_HW_1400m/PA_HW_1400m.shp"))
+  if (region == "pa1400_1ha") {
+    shp <- vect(paste0(proj_path,"GIS/Shapefiles/PalaniAanamalai1400m/PalaniAanamalai1400m.shp"))
   }
   
-  if (region == "swg1400_25ha") {
-    shp <- vect(paste0(proj_path,"GIS/Shapefiles/SWG1400m/SWG1400m.shp"))
+  if (region %in% c("nilpa1400_25ha","nilpa1400_1ha")) {
+    shp1 <- vect(paste0(proj_path,"GIS/Shapefiles/Nilgiri1400m/Nilgiri1400m.shp"))
+    shp2 <- vect(paste0(proj_path,"GIS/Shapefiles/PalaniAanamalai1400m/PalaniAanamalai1400m.shp"))
+    
+    shp <- rbind(shp1,shp2)
+    
+    if (! dir.exists(paste0(proj_path,"GIS/Shapefiles/Nilgiri_PA_1400m"))) {
+      dir.create(paste0(proj_path,"GIS/Shapefiles/Nilgiri_PA_1400m"),recursive = TRUE)
+    }
+    
+    writeVector(shp,
+                filename = paste0(proj_path,"GIS/Shapefiles/Nilgiri_PA_1400m/Nilgiri_PA_1400m.shp"),
+                overwrite = TRUE)
   }
   
-  if (region %in% c("nil1400_1ha","pahw1400_1ha")) {
+  if (region %in% c("nil1400_1ha","pa1400_1ha","nilpa1400_1ha")) {
     
     # Read canopy height rasters
     ch_2000 <- rast(paste0(proj_path,"GIS/Canopy/Canopy height/2000/canopy height_2000_1ha.tif"))
@@ -60,7 +71,7 @@ for (region in c("nil1400_1ha","pahw1400_1ha","swg1400_25ha")) {
     landcov_1995_cat <- rast(paste0(proj_path,"GIS/Land cover/1995D/1995D_rast_1ha.tif"))
   }
   
-  if (region == "swg1400_25ha") {
+  if (region == "nilpa1400_25ha") {
     
     # Read canopy height rasters
     ch_2000 <- rast(paste0(proj_path,"GIS/Canopy/Canopy height/2000/canopy height_2000_25ha.tif"))
