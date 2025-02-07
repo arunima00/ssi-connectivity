@@ -24,7 +24,7 @@ df_vect <- project(df_vect,y = crs(rast_1ha))
 df <- as.data.frame(df_vect,row.names = NULL,geom = "XY")
 
 # Create loop to separate datasets for each species
-for (i in c("SHAL","SHMA","MOFA","MOCA")) {
+for (i in c("SHAL","SHMA","MOFA","MOCA","FINI","EUAL")) {
   
   ## White-bellied Sholakili
   if (i == "SHAL"){
@@ -64,6 +64,13 @@ for (i in c("SHAL","SHMA","MOFA","MOCA")) {
     
     # Read shapefile for Nilgiris 1400m contour polygon
     shp <- vect(paste0(proj_path,"GIS/Shapefiles/Nilgiri1400m/Nilgiri1400m.shp"))
+  }
+  
+  if (i %in% c("FINI","EUAL")) {
+    df_sel <- cbind(df[,c("Site","x","y")],
+                    df %>% select(ends_with(i)))
+    
+    shp <- vect(paste0(proj_path,"GIS/Shapefiles/Nilgiri_PA_1400m/Nilgiri_PA_1400m.shp"))
   }
   
   # Reproject shapefile to reference CRS
