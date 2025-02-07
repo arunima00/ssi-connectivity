@@ -138,7 +138,7 @@ for (res in c("1ha","25ha")) {
     # Set background pixels to 0
     cover[is.na(cover)] <- 0
     
-    # Create list of file names
+    # Write rasters to TIF files
     output_paths <- c()
     
     if (! dir.exists(paste0(proj_path,"GIS/Derived rasters/cover_",year,"_",res))) {
@@ -149,7 +149,6 @@ for (res in c("1ha","25ha")) {
       output_paths <- c(output_paths,paste0(proj_path,"GIS/Derived rasters/cover_",year,"_",res,"/",i,".tif"))
     }
     
-    # Write rasters to TIF files
     writeRaster(cover,filename = output_paths,overwrite = TRUE)
   }
 }
@@ -158,7 +157,7 @@ for (res in c("1ha","25ha")) {
 lc_2017_woodland <- lc_2017_vect[lc_2017_vect$landcov %in% c("Shola Forest","Timber Plantations")]
 lc_1995_woodland <- lc_1995_vect[lc_1995_vect$landcov %in% c("Shola Forest","Timber Plantations")]
 
-# Derive woodland cover in the same way
+# Derive percentage woodland cover similarly
 wland_2017_1ha <- rasterize(lc_2017_woodland,
                             lc_2017_1ha,
                             field = "landcov",
