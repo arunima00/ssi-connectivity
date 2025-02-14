@@ -8,7 +8,7 @@ rm(list = ls())
 # Set project path prefix
 proj_path <- "C:/Users/aruni/arunima/IISERTpt/Connectivity/"
 
-# Get list of raster output file names
+# Get raster output file names
 files <- list.files(path = paste0(proj_path,"SDM/Output"),
                     pattern = ".tif$",
                     full.names = TRUE,
@@ -32,7 +32,7 @@ for (y in c("1995","2017")) {
     # Read raster
     r1 <- rast(i)
     
-    # Transform prediction maps to resistance layers using three different formulae
+    # Transform prediction maps to 2 resistance layers
     r2 <- 100 - (99 * ((1 - exp(-2 * r1))/(1 - exp(-2))))
     r3 <- 100 - (99 * ((1 - exp(-8 * r1))/(1 - exp(-8))))
     
@@ -54,7 +54,7 @@ for (y in c("1995","2017")) {
                 filename = paste0(proj_path,"Omniscape/Input/",y,"/Resistance layers/",j,"_c8.tif"),
                 overwrite = TRUE)
     
-    # Split filename to extract species name and region
+    # Extract species name and region
     k <- strsplit(j, "_")[[1]]
     
     # Read corresponding land cover raster
