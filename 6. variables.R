@@ -7,7 +7,7 @@ rm(list = ls())
 # Set project path prefix
 proj_path <- "C:/Users/aruni/arunima/IISERTpt/Connectivity/"
 
-# Create loop to clip and mask variables for all three regions
+# Create loop to clip and mask variables to all regions
 for (region in c("nil1400_1ha","pa1400_1ha","nilpa1400_25ha","nilpa1400_1ha")) {
   
   # Read shapefiles based on region
@@ -34,6 +34,7 @@ for (region in c("nil1400_1ha","pa1400_1ha","nilpa1400_25ha","nilpa1400_1ha")) {
                 overwrite = TRUE)
   }
   
+  # Clip and mask variables for forest species
   if (region %in% c("nil1400_1ha","pa1400_1ha","nilpa1400_1ha")) {
     
     # Read canopy height rasters
@@ -46,31 +47,35 @@ for (region in c("nil1400_1ha","pa1400_1ha","nilpa1400_25ha","nilpa1400_1ha")) {
                              full.names = TRUE)
     topo <- rast(files_topo)
     
-    # Read stack of proximity variable layers
-    prox_2017 <- c(rast(paste0(proj_path,"GIS/Derived rasters/Proximity/prox_settlements_2017_1ha.tif")),
-                   rast(paste0(proj_path,"GIS/Derived rasters/Proximity/prox_shola_2017_1ha.tif")),
-                   rast(paste0(proj_path,"GIS/Derived rasters/Proximity/prox_woodland_2017_1ha.tif")))
+    # Remove elevation variable
+    topo <- subset(topo,"elevation",negate = TRUE)
     
-    prox_1995 <- c(rast(paste0(proj_path,"GIS/Derived rasters/Proximity/prox_settlements_1995_1ha.tif")),
-                   rast(paste0(proj_path,"GIS/Derived rasters/Proximity/prox_shola_1995_1ha.tif")),
-                   rast(paste0(proj_path,"GIS/Derived rasters/Proximity/prox_woodland_1995_1ha.tif")))
+    # Read stack of distance variable layers
+    dist_2017 <- c(rast(paste0(proj_path,"GIS/Derived rasters/Distance/dist_settlements_2017_1ha.tif")),
+                   rast(paste0(proj_path,"GIS/Derived rasters/Distance/dist_shola_2017_1ha.tif")),
+                   rast(paste0(proj_path,"GIS/Derived rasters/Distance/dist_woodland_2017_1ha.tif")))
+    
+    dist_1995 <- c(rast(paste0(proj_path,"GIS/Derived rasters/Distance/dist_settlements_1995_1ha.tif")),
+                   rast(paste0(proj_path,"GIS/Derived rasters/Distance/dist_shola_1995_1ha.tif")),
+                   rast(paste0(proj_path,"GIS/Derived rasters/Distance/dist_woodland_1995_1ha.tif")))
     
     # Read climate zones raster
     clim_zone <- rast(paste0(proj_path,"GIS/Climate zones/clim_zone_1ha.tif"))
     
-    # Read land cover raster stacks
-    landcov_2017 <- c(rast(paste0(proj_path,"GIS/Derived rasters/cover_2017_1ha/Shola_Forest.tif")),
-                      rast(paste0(proj_path,"GIS/Derived rasters/cover_2017_1ha/Timber_Plantations.tif")),
-                      rast(paste0(proj_path,"GIS/Derived rasters/cover_2017_1ha/Woodland.tif")))
-    landcov_1995 <- c(rast(paste0(proj_path,"GIS/Derived rasters/cover_1995_1ha/Shola_Forest.tif")),
-                      rast(paste0(proj_path,"GIS/Derived rasters/cover_1995_1ha/Timber_Plantations.tif")),
-                      rast(paste0(proj_path,"GIS/Derived rasters/cover_1995_1ha/Woodland.tif")))
+    # Read percentage land cover raster stacks
+    landcov_2017 <- c(rast(paste0(proj_path,"GIS/Derived rasters/Land cover/cover_2017_1ha/Shola_Forest_cover.tif")),
+                      rast(paste0(proj_path,"GIS/Derived rasters/Land cover/cover_2017_1ha/Timber_Plantations_cover.tif")),
+                      rast(paste0(proj_path,"GIS/Derived rasters/Land cover/cover_2017_1ha/Woodland_cover.tif")))
+    landcov_1995 <- c(rast(paste0(proj_path,"GIS/Derived rasters/Land cover/cover_1995_1ha/Shola_Forest_cover.tif")),
+                      rast(paste0(proj_path,"GIS/Derived rasters/Land cover/cover_1995_1ha/Timber_Plantations_cover.tif")),
+                      rast(paste0(proj_path,"GIS/Derived rasters/Land cover/cover_1995_1ha/Woodland_cover.tif")))
     
     # Read categorical land cover rasters
     landcov_2017_cat <- rast(paste0(proj_path,"GIS/Land cover/2017D/2017D_rast_1ha.tif"))
     landcov_1995_cat <- rast(paste0(proj_path,"GIS/Land cover/1995D/1995D_rast_1ha.tif"))
   }
   
+  # Clip and mask variables for grassland species
   if (region == "nilpa1400_25ha") {
     
     # Read canopy height rasters
@@ -83,16 +88,16 @@ for (region in c("nil1400_1ha","pa1400_1ha","nilpa1400_25ha","nilpa1400_1ha")) {
                              full.names = TRUE)
     topo <- rast(files_topo)
     
-    # Read proximity to grassland layers
-    prox_2017 <- rast(paste0(proj_path,"GIS/Derived rasters/Proximity/prox_grassland_2017_25ha.tif"))
-    prox_1995 <- rast(paste0(proj_path,"GIS/Derived rasters/Proximity/prox_grassland_1995_25ha.tif"))
+    # Read distance to grassland layers
+    dist_2017 <- rast(paste0(proj_path,"GIS/Derived rasters/Distance/dist_grassland_2017_25ha.tif"))
+    dist_1995 <- rast(paste0(proj_path,"GIS/Derived rasters/Distance/dist_grassland_1995_25ha.tif"))
     
     # Read climate zones raster
     clim_zone <- rast(paste0(proj_path,"GIS/Climate zones/clim_zone_25ha.tif"))
     
     # Read grassland cover raster layers
-    landcov_2017 <- rast(paste0(proj_path,"GIS/Derived rasters/cover_2017_25ha/Shola_Grassland.tif"))
-    landcov_1995 <- rast(paste0(proj_path,"GIS/Derived rasters/cover_1995_25ha/Shola_Grassland.tif"))
+    landcov_2017 <- rast(paste0(proj_path,"GIS/Derived rasters/Land cover/cover_2017_25ha/Shola_Grassland_cover.tif"))
+    landcov_1995 <- rast(paste0(proj_path,"GIS/Derived rasters/Land cover/cover_1995_25ha/Shola_Grassland_cover.tif"))
     
     # Read categorical land cover rasters
     landcov_2017_cat <- rast(paste0(proj_path,"GIS/Land cover/2017D/2017D_rast_25ha.tif"))
@@ -121,39 +126,37 @@ for (region in c("nil1400_1ha","pa1400_1ha","nilpa1400_25ha","nilpa1400_1ha")) {
                        filename = paste0(proj_path,"SDM/Input/",region,"/predictors_all/canopyheight_2020.tif"),
                        overwrite = TRUE)
   
-  # Create vector of output file names for final topographic variable layers
+  # Crop and mask topographic variables raster stack to specified region
+  topo_clip <- crop(x = topo,y = shp,mask = TRUE)
+  
+  # Write cropped and masked layers to TIF files
   output_paths <- c()
   for (i in names(topo)) {
     output_paths <- c(output_paths,
                       paste0(proj_path,"SDM/Input/",region,"/predictors_all/",i,".tif"))
   }
   
-  # Crop and mask topographic variables raster stack to specified region
-  topo_clip <- crop(x = topo,y = shp,mask = TRUE)
-  
-  # Write cropped and masked layers to output TIF files
   writeRaster(topo_clip,filename = output_paths,overwrite = TRUE)
   
-  # Create vector of output file names for final proximity variable layers
+  # Crop and mask distance variables raster stack to specified region
+  dist_2017_clip <- crop(x = dist_2017,y = shp,mask = TRUE)
+  dist_1995_clip <- crop(x = dist_1995,y = shp,mask = TRUE)
+  
+  # Write cropped and masked layers to TIF files
   output_paths_2017 <- c()
-  for (i in names(prox_2017)){
+  for (i in names(dist_2017)){
     output_paths_2017 <- c(output_paths_2017,
                            paste0(proj_path,"SDM/Input/",region,"/predictors_all/",i,"_2017.tif"))
   }
   
   output_paths_1995 <- c()
-  for (i in names(prox_1995)){
+  for (i in names(dist_1995)){
     output_paths_1995 <- c(output_paths_1995,
                            paste0(proj_path,"SDM/Input/",region,"/predictors_all/",i,"_1995.tif"))
   }
   
-  # Crop and mask proximity variables raster stack to specified region
-  prox_2017_clip <- crop(x = prox_2017,y = shp,mask = TRUE)
-  prox_1995_clip <- crop(x = prox_1995,y = shp,mask = TRUE)
-  
-  # Write cropped and masked layers to output TIF files
-  writeRaster(prox_2017_clip,filename = output_paths_2017,overwrite = TRUE)
-  writeRaster(prox_1995_clip,filename = output_paths_1995,overwrite = TRUE)
+  writeRaster(dist_2017_clip,filename = output_paths_2017,overwrite = TRUE)
+  writeRaster(dist_1995_clip,filename = output_paths_1995,overwrite = TRUE)
   
   # Crop and mask climate zone layer to specified region and write to TIF file
   clim_zone_clip <- crop(x = clim_zone,
@@ -162,7 +165,11 @@ for (region in c("nil1400_1ha","pa1400_1ha","nilpa1400_25ha","nilpa1400_1ha")) {
                          filename = paste0(proj_path,"SDM/Input/",region,"/predictors_all/clim_zone.tif"),
                          overwrite = TRUE)
   
-  # Create vector of output file names for final land cover variable layers
+  # Crop and mask land cover raster stack to specified region
+  landcov_2017_clip <- crop(x = landcov_2017,y = shp,mask = TRUE)
+  landcov_1995_clip <- crop(x = landcov_1995,y = shp,mask = TRUE)
+  
+  # Write cropped and masked layers to TIF files
   output_paths_2017 <- c()
   for (i in names(landcov_2017)){
     output_paths_2017 <- c(output_paths_2017,
@@ -175,11 +182,6 @@ for (region in c("nil1400_1ha","pa1400_1ha","nilpa1400_25ha","nilpa1400_1ha")) {
                            paste0(proj_path,"SDM/Input/",region,"/predictors_all/",i,"_1995.tif"))
   }
   
-  # Crop and mask land cover raster stack to specified region
-  landcov_2017_clip <- crop(x = landcov_2017,y = shp,mask = TRUE)
-  landcov_1995_clip <- crop(x = landcov_1995,y = shp,mask = TRUE)
-  
-  # Write cropped and masked layers to output TIF files
   writeRaster(landcov_2017_clip,filename = output_paths_2017,overwrite = TRUE)
   writeRaster(landcov_1995_clip,filename = output_paths_1995,overwrite = TRUE)
   
@@ -199,17 +201,17 @@ for (region in c("nil1400_1ha","pa1400_1ha","nilpa1400_25ha","nilpa1400_1ha")) {
   # Create raster stacks for past and present
   predictors_present <- c(ch_2020_clip,
                           topo_clip,
-                          prox_2017_clip,
+                          dist_2017_clip,
                           clim_zone_clip,
                           landcov_2017_clip)
   
   predictors_past <- c(ch_2000_clip,
                        topo_clip,
-                       prox_1995_clip,
+                       dist_1995_clip,
                        clim_zone_clip,
                        landcov_1995_clip)
   
-  # Save raster stacks to output folder
+  # Save raster stacks and write to TIF files
   writeRaster(predictors_present,
               filename = paste0(proj_path,"SDM/Input/",region,"/predictors_present.tif"),
               overwrite = TRUE)
