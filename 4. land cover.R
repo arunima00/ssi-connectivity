@@ -30,7 +30,6 @@ lc_df <- data.frame(value = 1:8,
                               "Agricultural Land",
                               "Water bodies"))
 
-
 levels(lc_2017) <- lc_df
 levels(lc_1995) <- lc_df
 
@@ -51,7 +50,7 @@ rast_1ha <- rast(paste0(proj_path,"occupancy data/Jobin/1500 1ha grids/1ha grids
 # Read reference 25ha raster
 clim_zone <- rast(paste0(proj_path,"GIS/Climate zones/clim_zone_25ha.tif"))
 
-# Project land cover raster to 1ha and 25ha resolution and write to TIF files
+# Project land cover rasters to 1ha and 25ha resolutions and write to TIF files
 lc_2017_1ha <- project(x = lc_2017,
                        y = rast_1ha,
                        method = "near",
@@ -78,7 +77,7 @@ lc_1995_25ha <- project(x = lc_1995,
 lc_2017_vect <- as.polygons(lc_2017,round = FALSE)
 lc_1995_vect <- as.polygons(lc_1995,round = FALSE)
 
-# Save polygonised land cover shapefile to directory
+# Save polygonised land cover shapefiles to directory
 if (! dir.exists(paste0(proj_path,"GIS/Land cover/2017D/2017D vectorised"))) {
   dir.create(paste0(proj_path,"GIS/Land cover/2017D/2017D vectorised"),recursive = TRUE)
 }
@@ -95,6 +94,22 @@ writeVector(lc_1995_vect,
             filename = paste0(proj_path,"GIS/Land cover/1995D/1995D vectorised/1995D.shp"),
             overwrite = TRUE)
 
+# # Clear environment and unused memory space
+# rm(list = ls())
+# gc()
+# 
+# # Set project path prefix
+# proj_path <- "C:/Users/aruni/arunima/IISERTpt/Connectivity/"
+# 
+# # Read land cover rasters and polygonised land cover
+# lc_2017_1ha <- rast(paste0(proj_path,"GIS/Land cover/2017D/2017D_rast_1ha.tif"))
+# lc_1995_1ha <- rast(paste0(proj_path,"GIS/Land cover/1995D/1995D_rast_1ha.tif"))
+# lc_2017_25ha <- rast(paste0(proj_path,"GIS/Land cover/2017D/2017D_rast_25ha.tif"))
+# lc_1995_25ha <- rast(paste0(proj_path,"GIS/Land cover/1995D/1995D_rast_25ha.tif"))
+# lc_2017_vect <- vect(paste0(proj_path,"GIS/Land cover/2017D/2017D vectorised/2017D.shp"))
+# lc_1995_vect <- vect(paste0(proj_path,"GIS/Land cover/1995D/1995D vectorised/1995D.shp"))
+
+# Create loop to derive percentage cover for each land cover class with all rasters
 for (res in c("1ha","25ha")) {
   for (year in c("1995","2017")) {
     if (year == "1995") {
@@ -130,7 +145,12 @@ for (res in c("1ha","25ha")) {
                        update = TRUE,
                        by = "landcov")
     
-    names(cover) <- gsub(" ","_",names(cover))
+    # Rename layers
+    names(cover) <- lapply(names(cover),function(x) {
+      x <- gsub(" ","_",x)
+      x <- paste0(x,"_cover")
+      x
+    })
     
     # Convert to percentage
     cover <- cover * 100
@@ -141,12 +161,12 @@ for (res in c("1ha","25ha")) {
     # Write rasters to TIF files
     output_paths <- c()
     
-    if (! dir.exists(paste0(proj_path,"GIS/Derived rasters/cover_",year,"_",res))) {
-      dir.create(paste0(proj_path,"GIS/Derived rasters/cover_",year,"_",res),recursive = TRUE)
+    if (! dir.exists(paste0(proj_path,"GIS/Derived rasters/Land cover/cover_",year,"_",res))) {
+      dir.create(paste0(proj_path,"GIS/Derived rasters/Land cover/cover_",year,"_",res),recursive = TRUE)
     }
     
     for (i in names(cover)){
-      output_paths <- c(output_paths,paste0(proj_path,"GIS/Derived rasters/cover_",year,"_",res,"/",i,".tif"))
+      output_paths <- c(output_paths,paste0(proj_path,"GIS/Derived rasters/Land cover/cover_",year,"_",res,"/",i,".tif"))
     }
     
     writeRaster(cover,filename = output_paths,overwrite = TRUE)
@@ -178,12 +198,12 @@ wland_1995_1ha <- wland_1995_1ha * 100
 wland_2017_1ha[is.na(wland_2017_1ha)] <- 0
 wland_1995_1ha[is.na(wland_1995_1ha)] <- 0
 
-names(wland_2017_1ha) <- "Woodland"
-names(wland_1995_1ha) <- "Woodland"
+names(wland_2017_1ha) <- "Woodland_cover"
+names(wland_1995_1ha) <- "Woodland_cover"
 
 writeRaster(wland_2017_1ha,
-            filename = paste0(proj_path,"GIS/Derived rasters/cover_2017_1ha/Woodland.tif"),
+            filename = paste0(proj_path,"GIS/Derived rasters/Land cover/cover_2017_1ha/Woodland_cover.tif"),
             overwrite = TRUE)
 writeRaster(wland_1995_1ha,
-            filename = paste0(proj_path,"GIS/Derived rasters/cover_1995_1ha/Woodland.tif"),
+            filename = paste0(proj_path,"GIS/Derived rasters/Land cover/cover_1995_1ha/Woodland_cover.tif"),
             overwrite = TRUE)
