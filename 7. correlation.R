@@ -8,13 +8,13 @@ rm(list = ls())
 # Set project path prefix
 proj_path <- "C:/Users/aruni/arunima/IISERTpt/Connectivity/"
 
-## Repeat the following process for all raster stacks for present
+## Repeat the following process for all regions
 
 # Set region of interest
 #region <- "nilpa1400_25ha"
 #region <- "nilpa1400_1ha"
 #region <- "nil1400_1ha"
-#region <- "pa1400_1ha"
+region <- "pa1400_1ha"
 
 # Read raster stack
 st <- rast(paste0(proj_path,"SDM/Input/",region,"/predictors_present.tif"))
@@ -39,19 +39,16 @@ corrplot(corr_matrix,
          diag = FALSE)
 dev.off()
 
-# Remove lower triangle of correlation matrix
-corr_matrix[lower.tri(corr_matrix, diag = TRUE)] <- NA
-
 # Convert matrix to dataframe
+corr_matrix[lower.tri(corr_matrix, diag = TRUE)] <- NA
 df <- reshape2::melt(as.matrix(corr_matrix), na.rm = TRUE)
 
 # Order dataframe by correlation index
 df <- df[order(-abs(df$value)), ]
 
-# Remove row names
 rownames(df) <- NULL
 
-# Filter dataframe for correlation values above 0.7
+# Filter variables for correlation values above 0.7
 df_th <- droplevels(df[abs(df$value) >= 0.7,])
 
 # Write filtered dataframe to CSV file
@@ -65,7 +62,7 @@ all_vars # view all variables
 df_th # view correlated variables
 
 # Remove variables with correlation > 0.7 
-fil_vars <- all_vars[! all_vars %in% c("roughness","slope","elevation","prox_woodland")]
+fil_vars <- all_vars[! all_vars %in% c("roughness","slope","dist_woodland")]
 
 # Save list of filtered variable names
 save(fil_vars,
