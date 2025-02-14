@@ -28,7 +28,7 @@ dist_shola_1995_inv <- rast(paste0(proj_path,"GIS/Derived rasters/Distance/Extra
 dist_shola_2017_inv <- (0 - dist_shola_2017_inv)
 dist_shola_1995_inv <- (0 - dist_shola_1995_inv)
 
-# Mask values outside forest patch to NA for inverted raster
+# Mask values outside forest patch to NA for inverted rasters
 dist_shola_2017_inv <- mask(dist_shola_2017_inv,
                             mask = dist_shola_2017_temp,
                             maskvalues = 0,
@@ -53,7 +53,7 @@ dist_shola_1995 <- merge(x = dist_shola_1995_inv,
 names(dist_shola_2017) <- "dist_shola"
 names(dist_shola_1995) <- "dist_shola"
 
-# Write final raster to TIF file
+# Write final rasters to TIF files
 writeRaster(dist_shola_2017,
             filename = paste0(proj_path,"GIS/Derived rasters/Distance/Extra/dist_shola_2017_30m.tif"),
             overwrite = TRUE)
@@ -102,7 +102,7 @@ writeRaster(dist_woodland_1995,
             filename = paste0(proj_path,"GIS/Derived rasters/Distance/Extra/dist_woodland_1995_30m.tif"),
             overwrite = TRUE)
 
-# Read distance to settlements and grassland rasters
+# Read distance to settlement and grassland rasters
 dist_smts_2017 <- rast(paste0(proj_path,"GIS/Derived rasters/Distance/Extra/dist_settlements_2017_30m.tif"))
 dist_smts_1995 <- rast(paste0(proj_path,"GIS/Derived rasters/Distance/Extra/dist_settlements_1995_30m.tif"))
 
