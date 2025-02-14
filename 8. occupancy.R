@@ -26,46 +26,39 @@ df <- as.data.frame(df_vect,row.names = NULL,geom = "XY")
 # Create loop to separate datasets for each species
 for (i in c("SHAL","SHMA","MOFA","MOCA","FINI","EUAL")) {
   
-  ## White-bellied Sholakili
+  # Filter for White-bellied Sholakili
   if (i == "SHAL"){
-    # Filter data for Sholakilis
     df_sel <- cbind(df[,c("Site","x","y")],
                     df %>% select(ends_with("SHKL")))
     
-    # Read shapefile for Palani-Anamalai-Highwavies 1400m contour
     shp <- vect(paste0(proj_path,"GIS/Shapefiles/PA_HW_1400m/PA_HW_1400m.shp"))
   }
   
-  ## Palani Laughingthrush
+  ## Filter for Palani Laughingthrush
   if (i == "MOFA"){
-    # Filter data for Laughingthrushes
     df_sel <- cbind(df[,c("Site","x","y")],
                     df %>% select(ends_with("LATH")))
     
-    # Read shapefile for Palani-Anamalai-Highwavies 1400m contour polygon
     shp <- vect(paste0(proj_path,"GIS/Shapefiles/PA_HW_1400m/PA_HW_1400m.shp"))
   }
   
-  ## Nilgiri Sholakili
+  ## Filter for Nilgiri Sholakili
   if (i == "SHMA"){
-    # Filter data for Sholakilis
     df_sel <- cbind(df[,c("Site","x","y")],
                     df %>% select(ends_with("SHKL")))
     
-    # Read shapefile for Nilgiris 1400m contour polygon
     shp <- vect(paste0(proj_path,"GIS/Shapefiles/Nilgiri1400m/Nilgiri1400m.shp"))
   }
   
-  ## Nilgiri Laughingthrush
+  ## Filter for Nilgiri Laughingthrush
   if (i == "MOCA"){
-    # Filter data for Laughingthrushes
     df_sel <- cbind(df[,c("Site","x","y")],
                     df %>% select(ends_with("LATH")))
     
-    # Read shapefile for Nilgiris 1400m contour polygon
     shp <- vect(paste0(proj_path,"GIS/Shapefiles/Nilgiri1400m/Nilgiri1400m.shp"))
   }
   
+  # Filter for Flycatchers
   if (i %in% c("FINI","EUAL")) {
     df_sel <- cbind(df[,c("Site","x","y")],
                     df %>% select(ends_with(i)))
@@ -86,7 +79,7 @@ for (i in c("SHAL","SHMA","MOFA","MOCA","FINI","EUAL")) {
   # Remove all rows with NAs
   df_sel <- df_sel %>% na.omit()
   
-  # Convert individual counts across 4 replicates per grid to 1/0 presence-absence
+  # Convert individual counts to 1/0 presence-absence
   pres<-c()
   for (j in 1:nrow(df_sel)){
     if (sum(df_sel[j,4:7]) != 0){
@@ -109,14 +102,12 @@ for (i in c("SHAL","SHMA","MOFA","MOCA","FINI","EUAL")) {
   # Calculate average species abundance for each grid
   avg <- rowMeans(df_sel[,c(4:7)])
 
-  # Create new dataframe with grid lat-long, species presence/absence, 
-  # detection probability and average abundance
+  # Create new dataframe
   df_final <- cbind(df_sel[c("x","y")],
                     pres,
                     det_prob,
                     avg)
   
-  # Rename columns
   colnames(df_final) <- c("Longitude",
                           "Latitude",
                           "Presence",
@@ -138,7 +129,7 @@ df_anni <- read.csv(paste0(proj_path,"occupancy data/dataset for pipit analysis.
 df_sel <- cbind(df_anni[,c("Site","Longitude","Latitude")],
                 df_anni %>% select(ends_with("ANNI")))
 
-# Convert individual counts across 4 replicates per grid to 1/0 presence-absence
+# Convert individual counts to 1/0 presence-absence
 pres<-c()
 for (j in 1:nrow(df_sel)){
   if (any(df_sel[j,4:7] != 0,na.rm = TRUE)){
@@ -149,7 +140,7 @@ for (j in 1:nrow(df_sel)){
   } 
 }
 
-# Create new dataframe with grid lat-long and presence/absence
+# Create new dataframe
 df_final <- cbind(df_sel[c("Longitude","Latitude")],pres)
 
 # Convert to points layer
@@ -160,9 +151,9 @@ df_vect <- project(df_vect,y = crs(rast_1ha))
 
 # Convert back to dataframe
 df <- as.data.frame(df_vect,row.names = NULL,geom = "XY")
-
 colnames(df) <- c("Presence","Longitude","Latitude")
 
+# Write to CSV file
 write.csv(df,
           file = "occupancy data/Filtered/ANNI.csv",
           row.names = FALSE)
