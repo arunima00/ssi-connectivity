@@ -32,9 +32,10 @@ for (y in c("1995","2017")) {
     # Read raster
     r1 <- rast(i)
     
-    # Transform prediction maps to 2 resistance layers
+    # Transform prediction maps to resistance layers
     r2 <- 100 - (99 * ((1 - exp(-2 * r1))/(1 - exp(-2))))
     r3 <- 100 - (99 * ((1 - exp(-8 * r1))/(1 - exp(-8))))
+    r4 <- 100 - (99 * ((1 - exp(-0.25 * r1))/(1 - exp(-0.25))))
     
     # Extract file name
     j <- strsplit(i,"/")[[1]][length(strsplit(i,"/")[[1]])]
@@ -53,6 +54,9 @@ for (y in c("1995","2017")) {
     writeRaster(r3,
                 filename = paste0(proj_path,"Omniscape/Input/",y,"/Resistance layers/",j,"_c8.tif"),
                 overwrite = TRUE)
+    writeRaster(r4,
+                filename = paste0(proj_path,"Omniscape/Input/",y,"/Resistance layers/",j,"_c0.25.tif"),
+                overwrite = TRUE)
     
     # Extract species name and region
     k <- strsplit(j, "_")[[1]]
@@ -70,7 +74,7 @@ for (y in c("1995","2017")) {
     }
     
     # Mask all non-source pixels in prediction raster 
-    r4 <- mask(r1,mask = s)
+    r5 <- mask(r1,mask = s)
     
     # Create output folder in directory if does not exist
     if (! dir.exists(paste0(proj_path,"Omniscape/Input/",y,"/Source layers"))){
@@ -79,7 +83,7 @@ for (y in c("1995","2017")) {
     }
     
     # Write source layer to TIF file
-    writeRaster(r4,
+    writeRaster(r5,
                 filename = paste0(proj_path,"Omniscape/Input/",y,"/Source layers/",j,".tif"),
                 overwrite = TRUE)
   }
