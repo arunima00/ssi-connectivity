@@ -3,17 +3,19 @@ using Omniscape, Rasters, Plots
 
 # Loop for each species
 for sdm in ["SHMA_RF_nil1400_1ha","SHAL_RF_pa1400_1ha","MOCA_RF_nil1400_1ha","MOFA_RF_pa1400_1ha","ANNI_RF_nilpa1400_25ha","EUAL_RF_nilpa1400_1ha","FINI_RF_nilpa1400_1ha"]
-
-    if sdm == "ANNI_RF_nilpa1400_25ha" || sdm == "EUAL_RF_nilpa1400_1ha"
-        dist = ["0.5km","1km","1.5km"]
-    else
-        dist = ["0.2km","0.5km","1km"]
-    end
-        
+     
     # Loop for each resistance layer
-    for constant in ["c2", "c8"]
+    for constant in ["c0.25","c2", "c8"]
 
-        # Loop for each dispersal distance value
+        # Loop for range of species-specific dispersal distance values
+        if sdm == "ANNI_RF_nilpa1400_25ha" 
+            dist = ["1km","1.5km","3km"]
+        elseif sdm == "EUAL_RF_nilpa1400_1ha"
+            dist = ["0.5km","1km","1.5km"]
+        else
+            dist = ["0.2km","0.5km","1km"]
+        end
+        
         for radius in dist
 
             # Loop for each scenario: past and present
@@ -21,12 +23,12 @@ for sdm in ["SHMA_RF_nil1400_1ha","SHAL_RF_pa1400_1ha","MOCA_RF_nil1400_1ha","MO
 
                 # Convert dispersal distance to pixel values
                 if sdm == "ANNI_RF_nilpa1400_25ha"
-                    if radius == "0.5km"
-                        radius_pixels = string(1)
-                    elseif radius == "1km"
+                    if radius == "1km"
                         radius_pixels = string(2)
-                    else radius == "1.5km"
+                    elseif radius == "1.5km"
                         radius_pixels = string(3)
+                    else radius == "3km"
+                        radius_pixels = string(6)
                     end
                 else
                     if radius == "0.2km"
@@ -44,7 +46,7 @@ for sdm in ["SHMA_RF_nil1400_1ha","SHAL_RF_pa1400_1ha","MOCA_RF_nil1400_1ha","MO
                 res, wkt, transform = Omniscape.read_raster("Input/" * year * "/Resistance layers/" * sdm * "_" * constant * ".tif", Float64)
 
                 # Set model parameters
-                config = Dict{String, String}(
+                config = Dict{String, String} (
                     "radius" => radius_pixels,
                     "project_name" => "Output/" * year * "/" * sdm * "_" * constant * "/" * radius,
                     "source_from_resistance" => "false",
