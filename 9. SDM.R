@@ -37,8 +37,7 @@ col <- c("Occurrence type",
          "AUC (ROC)",
          "AUC (PRC)",
          "mtry",
-         "nodesize",
-         used_vars)
+         "nodesize")
 
 spec_list <- c("SHAL","SHMA","MOFA","MOCA","ANNI","EUAL","FINI")
 
@@ -46,6 +45,10 @@ spec_list <- c("SHAL","SHMA","MOFA","MOCA","ANNI","EUAL","FINI")
 model_param <- matrix(nrow = length(col),
                       ncol = length(spec_list),
                       dimnames = list(col,spec_list))
+
+varimp_df <- matrix(nrow = length(used_vars),
+                    ncol = length(spec_list),
+                    dimnames = list(used_vars,spec_list))
 
 # Create loop to run SDMs for all species
 for (spec in spec_list) {
@@ -165,9 +168,6 @@ for (spec in spec_list) {
   set.seed(25)
   res <- tuneRanger(mlr.task,tune.parameters = c("mtry","min.node.size"))
   
-  # View mean of best 5 % of the results
-  res
-  
   # Set hyperparameter values
   mtry <- res$recommended.pars[["mtry"]]
   nodesize <- res$recommended.pars[["min.node.size"]]
@@ -183,7 +183,7 @@ for (spec in spec_list) {
                        ntree = 1000,
                        mtry = mtry,
                        nodesize = nodesize,
-                       importance = T)
+                       importance = TRUE)
   }
   
   # Train downsampled random forest using pseudo-absences for grassland species
@@ -203,7 +203,8 @@ for (spec in spec_list) {
                        mtry = mtry,
                        sampsize = smpsize,
                        nodesize = mtry,
-                       replace = TRUE)
+                       replace = TRUE,
+                       importance = TRUE)
   } 
   
   # Create output folder in directory if does not exist
@@ -242,27 +243,25 @@ for (spec in spec_list) {
     dir.create(paste0(proj_path,"SDM/Output/Variable importance"),recursive = TRUE)
   }
   
-  # Compute variable importance by mean decrease in Gini index
-  imp <- randomForest::importance(rf,type = 2)
+  # Get variable importance values
+  imp <- importance(rf,type = 1,scale = TRUE)
   
-  # Convert to percentage
-  imp <- imp * 100 / sum(imp)
-  
-  # Save variable importance values
   for (i in used_vars) {
     if (i %in% row.names(imp)) {
-      model_param[i,spec] <- imp[i,1]
+        varimp_df[i,spec] <- imp[i,"MeanDecreaseAccuracy"]
     }
   }
   
+  # Rescale values for ease of comparison across species
+  imp_scaled <- scale(imp)
+  
   # Order variables by importance
-  imp <- imp[order(imp[,1]),]
+  imp_scaled <- imp_scaled[order(imp_scaled[,1]),]
   
   # Plot variable importance
   png(filename = paste0(proj_path,"SDM/Output/Variable importance/",spec,"_RF_",region,".png"))
-  dotchart(imp,
-           xlim = c(0,100),
-           xlab = "Percentage mean decrease in Gini index")
+  dotchart(imp_scaled,
+           xlab = "Mean decrease in accuracy (rescaled)")
   dev.off()
   
   # Create output folder in directory if does not exist
@@ -364,3 +363,4 @@ for (spec in spec_list) {
 
 # Write model parameter matrix to CSV file
 write.csv(model_param,file = paste0(proj_path,"SDM/Output/Models/Summary table.csv"))
+write.csv(varimp_df,file = paste0(proj_path,"SDM/Output/Variable importance/varimp table.csv"))
