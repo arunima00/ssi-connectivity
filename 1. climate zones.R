@@ -52,16 +52,9 @@ names(clim_zone) <- "clim_zone"
 # Read reference 1ha resolution raster
 rast_1ha <- rast(paste0(proj_path,"occupancy data/1500 1ha grids/1ha grids.tif"))
 
-# Reproject climate zone raster to 1ha and 25ha resolution and write to TIF files
+# Reproject climate zone raster to 1ha resolution and write to TIF file
 clim_zone_1ha <- project(x = clim_zone,
                          y = rast_1ha,
                          method = "near",
                          filename = paste0(proj_path,"GIS/Climate zones/clim_zone_1ha.tif"),
                          overwrite = TRUE)
-
-clim_zone_25ha <- project(x = clim_zone,
-                          y = crs(rast_1ha),
-                          method = "near",
-                          res = 500,
-                          filename = paste0(proj_path,"GIS/Climate zones/clim_zone_25ha.tif"),
-                          overwrite = TRUE)
