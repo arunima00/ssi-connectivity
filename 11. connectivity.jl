@@ -1,15 +1,20 @@
+# Install packages
+# import Pkg; Pkg.add("Omniscape")
+# import Pkg; Pkg.add("Rasters")
+# import Pkg; Pkg.add("Plots")
+
 # Load packages
 using Omniscape, Rasters, Plots
 
 # Loop for each species
-for sdm in ["SHMA_RF_nil1400_1ha","SHAL_RF_pa1400_1ha","MOCA_RF_nil1400_1ha","MOFA_RF_pa1400_1ha","ANNI_RF_nilpa1400_25ha","EUAL_RF_nilpa1400_1ha","FINI_RF_nilpa1400_1ha"]
+for sdm in ["SHMA_RF_nil1400_1ha","SHAL_RF_pa1400_1ha","MOCA_RF_nil1400_1ha","MOFA_RF_pa1400_1ha","ANNI_RF_nilpa1400_1ha","EUAL_RF_nilpa1400_1ha","FINI_RF_nilpa1400_1ha"]
      
     # Loop for each resistance layer
     for constant in ["c0.25","c2", "c8"]
 
         # Loop for range of species-specific dispersal distance values
-        if sdm == "ANNI_RF_nilpa1400_25ha" 
-            dist = ["1km","1.5km","3km"]
+        if sdm == "ANNI_RF_nilpa1400_1ha" 
+            dist = ["1km","3km","5km"]
         elseif sdm == "EUAL_RF_nilpa1400_1ha"
             dist = ["0.5km","1km","1.5km"]
         else
@@ -22,31 +27,25 @@ for sdm in ["SHMA_RF_nil1400_1ha","SHAL_RF_pa1400_1ha","MOCA_RF_nil1400_1ha","MO
             for year in ["1995","2017"]
 
                 # Convert dispersal distance to pixel values
-                if sdm == "ANNI_RF_nilpa1400_25ha"
-                    if radius == "1km"
-                        radius_pixels = string(2)
-                    elseif radius == "1.5km"
-                        radius_pixels = string(3)
-                    else radius == "3km"
-                        radius_pixels = string(6)
-                    end
-                else
-                    if radius == "0.2km"
-                        radius_pixels = string(2)
-                    elseif radius == "0.5km"
-                        radius_pixels = string(5)
-                    elseif radius == "1km"
-                        radius_pixels = string(10)
-                    else radius == "1.5km"
-                        radius_pixels = string(15)
-                    end
-                end                    
+                if radius == "0.2km"
+                    radius_pixels = string(2)
+                elseif radius == "0.5km"
+                    radius_pixels = string(5)
+                elseif radius == "1km"
+                    radius_pixels = string(10)
+                elseif radius == "1.5km"
+                    radius_pixels = string(15)
+                elseif radius == "3km"
+                    radius_pixels = string(30)
+                else radius == "5km"
+                    radius_pixels = string(50)
+                end                   
 
                 # Read resistance layer
                 res, wkt, transform = Omniscape.read_raster("Input/" * year * "/Resistance layers/" * sdm * "_" * constant * ".tif", Float64)
 
                 # Set model parameters
-                config = Dict{String, String} (
+                config = Dict{String, String}(
                     "radius" => radius_pixels,
                     "project_name" => "Output/" * year * "/" * sdm * "_" * constant * "/" * radius,
                     "source_from_resistance" => "false",
