@@ -152,9 +152,6 @@ names(dist_smts_1995) <- "dist_settlements"
 # Read reference 1ha resolution raster
 rast_1ha <- rast(paste0(proj_path,"occupancy data/1500 1ha grids/1ha grids.tif"))
 
-# Read reference 25ha raster
-clim_zone <- rast(paste0(proj_path,"GIS/Climate zones/clim_zone_25ha.tif"))
-
 # Reproject all rasters and write to TIF files
 dist_shola_2017_1ha <- project(x = dist_shola_2017,
                                y = rast_1ha,
@@ -178,16 +175,16 @@ dist_woodland_1995_1ha <- project(x = dist_woodland_1995,
                                   filename = paste0(proj_path,"GIS/Derived rasters/Distance/dist_woodland_1995_1ha.tif"),
                                   overwrite = TRUE)
 
-dist_grassland_2017_25ha <- project(x = dist_grassland_2017,
-                                    y = clim_zone,
-                                    method = "med",
-                                    filename = paste0(proj_path,"GIS/Derived rasters/Distance/dist_grassland_2017_25ha.tif"),
-                                    overwrite = TRUE)
-dist_grassland_1995_25ha <- project(x = dist_grassland_1995,
-                                    y = clim_zone,
-                                    method = "med",
-                                    filename = paste0(proj_path,"GIS/Derived rasters/Distance/dist_grassland_1995_25ha.tif"),
-                                    overwrite = TRUE)
+dist_grassland_2017_1ha <- project(x = dist_grassland_2017,
+                                   y = rast_1ha,
+                                   method = "med",
+                                   filename = paste0(proj_path,"GIS/Derived rasters/Distance/dist_grassland_2017_1ha.tif"),
+                                   overwrite = TRUE)
+dist_grassland_1995_1ha <- project(x = dist_grassland_1995,
+                                   y = rast_1ha,
+                                   method = "med",
+                                   filename = paste0(proj_path,"GIS/Derived rasters/Distance/dist_grassland_1995_1ha.tif"),
+                                   overwrite = TRUE)
 
 dist_smts_2017_1ha <- project(x = dist_smts_2017,
                               y = rast_1ha,
