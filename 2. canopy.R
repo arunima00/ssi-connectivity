@@ -31,10 +31,7 @@ writeRaster(ch_2020,
 # Read reference 1ha resolution raster
 rast_1ha <- rast(paste0(proj_path,"occupancy data/1500 1ha grids/1ha grids.tif"))
 
-# Read reference 25ha raster
-clim_zone <- rast(paste0(proj_path,"GIS/Climate zones/clim_zone_25ha.tif"))
-
-# Reproject all rasters to reference rasters and write to TIF files
+# Reproject all rasters to reference raster and write to TIF files
 ch_2000_1ha <- project(x = ch_2000,
                        y = rast_1ha,
                        method = "med",
@@ -45,14 +42,3 @@ ch_2020_1ha <- project(x = ch_2020,
                        method = "med",
                        filename = paste0(proj_path,"GIS/Canopy/Canopy height/2020/canopy height_2020_1ha.tif"),
                        overwrite = TRUE)
-
-ch_2000_25ha <- project(x = ch_2000,
-                        y = clim_zone,
-                        method = "med",
-                        filename = paste0(proj_path,"GIS/Canopy/Canopy height/2000/canopy height_2000_25ha.tif"),
-                        overwrite = TRUE)
-ch_2020_25ha <- project(x = ch_2020,
-                        y = clim_zone,
-                        method = "med",
-                        filename = paste0(proj_path,"GIS/Canopy/Canopy height/2020/canopy height_2020_25ha.tif"),
-                        overwrite = TRUE)
