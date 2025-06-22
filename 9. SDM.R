@@ -12,16 +12,13 @@ rm(list = ls())
 proj_path <- "C:/Users/aruni/arunima/IISERTpt/Connectivity/"
 
 # Create list of all predictor variables across species
-load(paste0("SDM/Input/nil1400_1ha/Correlation/nil1400_1ha_fil.RData"))
+load(paste0(proj_path,"SDM/Input/nil1400_1ha/Correlation_forest/nil1400_1ha_fil.RData"))
 used_vars <- fil_vars
 
-load(paste0("SDM/Input/pa1400_1ha/Correlation/pa1400_1ha_fil.RData"))
+load(paste0(proj_path,"SDM/Input/pa1400_1ha/Correlation_forest/pa1400_1ha_fil.RData"))
 used_vars <- c(used_vars,fil_vars)
 
-load(paste0("SDM/Input/nilpa1400_1ha/Correlation/nilpa1400_1ha_fil.RData"))
-used_vars <- c(used_vars,fil_vars)
-
-load(paste0("SDM/Input/nilpa1400_25ha/Correlation/nilpa1400_25ha_fil.RData"))
+load(paste0(proj_path,"SDM/Input/nilpa1400_1ha/Correlation_forest/nilpa1400_1ha_fil.RData"))
 used_vars <- c(used_vars,fil_vars)
 
 used_vars <- unique(unlist(used_vars))
@@ -29,7 +26,6 @@ used_vars <- unique(unlist(used_vars))
 # Set row and column names for model paramaters matrix
 col <- c("Occurrence type",
          "Region",
-         "Resolution",
          "Presences (train)",
          "Presences (test)",
          "Absences (train)",
@@ -57,64 +53,151 @@ for (spec in spec_list) {
   if (spec %in% c("SHAL","MOFA")){
     region <- "pa1400_1ha"
     model_param["Region",spec] <- "pa1400"
-    model_param["Resolution",spec] <- "1ha"
   }
   
   if (spec %in% c("SHMA","MOCA")){
     region <- "nil1400_1ha"
     model_param["Region",spec] <- "nil1400"
-    model_param["Resolution",spec] <- "1ha"
   }
   
-  if (spec == "ANNI"){
-    region <- "nilpa1400_25ha"
-    model_param["Region",spec] <- "nilpa1400"
-    model_param["Resolution",spec] <- "25ha"
-  }
-  
-  if (spec %in% c("EUAL","FINI")) {
+  if (spec %in% c("EUAL","FINI","ANNI")) {
     region <- "nilpa1400_1ha"
     model_param["Region",spec] <- "nilpa1400"
-    model_param["Resolution",spec] <- "1ha"
   }
   
-  predictors <- rast(paste0(proj_path,"SDM/Input/",region,"/predictors_present.tif"))
-  
-  # Load filtered variable names
-  load(paste0(proj_path,"SDM/Input/",region,"/Correlation/",region,"_fil.RData"))
-  
-  # Filter out correlated variables
-  predictors <- predictors[[fil_vars]]
-  
-  #Load species occurrences
-  occ <- read.csv(paste0(proj_path,"occupancy data/Filtered/",spec,".csv"))
-  occ <- occ[,c("Longitude","Latitude","Presence")]
-  
-  # Convert to SpatVector of points
-  occ_vect <- vect(occ,geom = c("Longitude","Latitude"),crs = crs(predictors))
-  
-  # Get data table
-  df <- terra::extract(predictors,occ_vect,ID = FALSE,bind = TRUE)
-  df <- as.data.frame(df,geom = "XY") %>% na.omit()
-  
-  # Set occurrence data type (Presence-Absence)
-  model_param["Occurrence type",spec] <- "PA"
+  if (spec != "ANNI") {
+    predictors <- rast(paste0(proj_path,"SDM/Input/",region,"/predictors_present_forest.tif"))
+    
+    # Load filtered variable names
+    load(paste0(proj_path,"SDM/Input/",region,"/Correlation_forest/",region,"_fil.RData"))
+    
+    # Filter out correlated variables
+    predictors <- predictors[[fil_vars]]
+    
+    # Read occupancy data for forest species to dataframe
+    df <- read.csv(paste0(proj_path,"occupancy data/new dataset forest species.csv"))
+    
+    # Filter for White-bellied Sholakili
+    if (spec == "SHAL"){
+      df_sel <- cbind(df[,c("Site","Longitude","Latitude")],
+                      df %>% select(ends_with("SHKL")))
+      
+      shp <- vect(paste0(proj_path,"GIS/Shapefiles/PA_HW_1400m/PA_HW_1400m.shp"))
+    }
+    
+    ## Filter for Palani Laughingthrush
+    if (spec == "MOFA"){
+      df_sel <- cbind(df[,c("Site","Longitude","Latitude")],
+                      df %>% select(ends_with("LATH")))
+      
+      shp <- vect(paste0(proj_path,"GIS/Shapefiles/PA_HW_1400m/PA_HW_1400m.shp"))
+    }
+    
+    ## Filter for Nilgiri Sholakili
+    if (spec == "SHMA"){
+      df_sel <- cbind(df[,c("Site","Longitude","Latitude")],
+                      df %>% select(ends_with("SHKL")))
+      
+      shp <- vect(paste0(proj_path,"GIS/Shapefiles/Nilgiri1400m/Nilgiri1400m.shp"))
+    }
+    
+    ## Filter for Nilgiri Laughingthrush
+    if (spec == "MOCA"){
+      df_sel <- cbind(df[,c("Site","Longitude","Latitude")],
+                      df %>% select(ends_with("LATH")))
+      
+      shp <- vect(paste0(proj_path,"GIS/Shapefiles/Nilgiri1400m/Nilgiri1400m.shp"))
+    }
+    
+    # Filter for Flycatchers
+    if (spec %in% c("FINI","EUAL")) {
+      df_sel <- cbind(df[,c("Site","Longitude","Latitude")],
+                      df %>% select(ends_with(spec)))
+      
+      shp <- vect(paste0(proj_path,"GIS/Shapefiles/Nilgiri_PA_1400m/Nilgiri_PA_1400m.shp"))
+    }
+    
+    # Filter data for species-specific region
+    df_sel <- filter(df_sel,
+                     Longitude >= xmin(shp),
+                     Longitude <= xmax(shp),
+                     Latitude >= ymin(shp),
+                     Latitude <= ymax(shp))
+    
+    # Convert individual counts to 1/0 presence-absence
+    pres <- c()
+    for (j in 1:nrow(df_sel)){
+      if (is.na(sum(df_sel[j,4:7]))) {
+        if (sum(df_sel[j,4:7],na.rm = TRUE) > 0) {
+          pres[j] <- 1
+        }
+        else {
+          pres[j] <- NA
+        }
+      }
+      
+      if (! is.na(sum(df_sel[j,4:7]))) {
+        if (sum(df_sel[j,4:7]) > 0) {
+          pres[j] <- 1
+        }
+        else {
+          pres[j] <- 0
+        }
+      }
+    }
+    
+    # Create new dataframe
+    occ <- cbind(df_sel[c("Site","Longitude","Latitude")],
+                 pres) %>% na.omit()
+    
+    colnames(occ)[4] <- "Presence"
+    
+    # Convert to SpatVector of points
+    occ_vect <- vect(occ,geom = c("Longitude","Latitude"),crs = "epsg:4326")
+    occ_vect <- project(occ_vect,crs(predictors))
+    
+    # Get data table
+    df <- terra::extract(predictors,occ_vect,ID = FALSE,bind = TRUE)
+    df <- as.data.frame(df,geom = "XY") %>% na.omit()
+    
+    if (! dir.exists(paste0(proj_path,"occupancy data/Filtered"))) {
+      dir.create(paste0(proj_path,"occupancy data/Filtered"),recursive = TRUE)
+    }
+    
+    # Write final occupancy data for each species to CSV files
+    write.csv(df[,c("Site","x","y","Presence")],
+              file = paste0(proj_path,"occupancy data/Filtered/",spec,".csv"),
+              row.names = FALSE)
+    
+    # Set occurrence data type (Presence-Absence)
+    model_param["Occurrence type",spec] <- "PA"
+  }
   
   # Generate pseudo-absences for Nilgiri Pipit using biomod2
   if (spec == "ANNI") {
+    predictors <- rast(paste0(proj_path,"SDM/Input/",region,"/predictors_present_grassland.tif"))
     
-    # Filter for presences only
-    df_temp <- filter(df,Presence == 1)
-    occ_vect <- occ_vect[occ_vect$Presence == 1]
+    # Load filtered variable names
+    load(paste0(proj_path,"SDM/Input/",region,"/Correlation_grassland/",region,"_fil.RData"))
+    
+    # Filter out correlated variables
+    predictors <- predictors[[fil_vars]]
+    
+    #Load species occurrences
+    occ <- read.csv(paste0(proj_path,"occupancy data/Pipit presence data - Sheet1.csv"))
+    
+    # Convert to SpatVector of points
+    occ_vect <- vect(occ[,c("longitude","latitude")],geom = c("longitude","latitude"),crs = "epsg:4326")
+    occ_vect <- project(occ_vect,crs(predictors))
     
     # Generate randomly sampled pseudo-absences with spatial exclusion
     BiomodData <- biomod2::BIOMOD_FormatingData(resp.name = spec,
                                                 resp.var = occ_vect,
                                                 expl.var = predictors,
                                                 PA.nb.rep = 1,
-                                                PA.nb.absences = nrow(df_temp)*10,
+                                                PA.nb.absences = 5000,
                                                 PA.strategy = "disk",
-                                                PA.dist.min = 1500,
+                                                PA.dist.min = 1000,
                                                 na.rm = TRUE,
                                                 filter.raster = TRUE,
                                                 seed.val = 25)
@@ -129,6 +212,11 @@ for (spec in spec_list) {
     
     # Set occurrence data type (Presence-Background)
     model_param["Occurrence type",spec] <- "PB"
+    
+    # Write final occupancy data for each species to CSV files
+    write.csv(df[,c("x","y","Presence")],
+              file = paste0(proj_path,"occupancy data/Filtered/",spec,".csv"),
+              row.names = FALSE)
   }
   
   # Stratified sampling on presence-absence data
@@ -325,8 +413,14 @@ for (spec in spec_list) {
               file = paste0(proj_path,"SDM/Output/Prediction/",spec,"_RF_",region,".tif"),
               overwrite = TRUE)
   
-  # Read past predictor variables dataset 
-  predictors_past <- rast(paste0(proj_path,"SDM/Input/",region,"/predictors_past.tif"))
+  # Read past predictor variables dataset
+  if (spec != "ANNI") {
+    predictors_past <- rast(paste0(proj_path,"SDM/Input/",region,"/predictors_past_forest.tif"))
+  }
+  
+  if (spec == "ANNI") {
+    predictors_past <- rast(paste0(proj_path,"SDM/Input/",region,"/predictors_past_grassland.tif"))
+  }
   
   # Filter unused variables out
   predictors_past <- predictors_past[[fil_vars]]
