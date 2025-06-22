@@ -8,7 +8,7 @@ rm(list = ls())
 proj_path <- "C:/Users/aruni/arunima/IISERTpt/Connectivity/"
 
 # Create loop to clip and mask variables to all regions
-for (region in c("nil1400_1ha","pa1400_1ha","nilpa1400_25ha","nilpa1400_1ha")) {
+for (region in c("nil1400_1ha","pa1400_1ha","nilpa1400_1ha")) {
   
   # Read shapefiles based on region
   if (region == "nil1400_1ha") {
@@ -19,7 +19,7 @@ for (region in c("nil1400_1ha","pa1400_1ha","nilpa1400_25ha","nilpa1400_1ha")) {
     shp <- vect(paste0(proj_path,"GIS/Shapefiles/PalaniAanamalai1400m/PalaniAanamalai1400m.shp"))
   }
   
-  if (region %in% c("nilpa1400_25ha","nilpa1400_1ha")) {
+  if (region == "nilpa1400_1ha") {
     shp1 <- vect(paste0(proj_path,"GIS/Shapefiles/Nilgiri1400m/Nilgiri1400m.shp"))
     shp2 <- vect(paste0(proj_path,"GIS/Shapefiles/PalaniAanamalai1400m/PalaniAanamalai1400m.shp"))
     
@@ -34,75 +34,43 @@ for (region in c("nil1400_1ha","pa1400_1ha","nilpa1400_25ha","nilpa1400_1ha")) {
                 overwrite = TRUE)
   }
   
-  # Clip and mask variables for forest species
-  if (region %in% c("nil1400_1ha","pa1400_1ha","nilpa1400_1ha")) {
-    
-    # Read canopy height rasters
-    ch_2000 <- rast(paste0(proj_path,"GIS/Canopy/Canopy height/2000/canopy height_2000_1ha.tif"))
-    ch_2020 <- rast(paste0(proj_path,"GIS/Canopy/Canopy height/2020/canopy height_2020_1ha.tif"))
-    
-    # Read stack of topographic variable layers
-    files_topo <- list.files(paste0(proj_path,"GIS/Derived rasters/Topo variables/1ha"),
-                             pattern = ".tif$",
-                             full.names = TRUE)
-    topo <- rast(files_topo)
-    
-    # Remove elevation variable
-    topo <- subset(topo,"elevation",negate = TRUE)
-    
-    # Read stack of distance variable layers
-    dist_2017 <- c(rast(paste0(proj_path,"GIS/Derived rasters/Distance/dist_settlements_2017_1ha.tif")),
-                   rast(paste0(proj_path,"GIS/Derived rasters/Distance/dist_shola_2017_1ha.tif")),
-                   rast(paste0(proj_path,"GIS/Derived rasters/Distance/dist_woodland_2017_1ha.tif")))
-    
-    dist_1995 <- c(rast(paste0(proj_path,"GIS/Derived rasters/Distance/dist_settlements_1995_1ha.tif")),
-                   rast(paste0(proj_path,"GIS/Derived rasters/Distance/dist_shola_1995_1ha.tif")),
-                   rast(paste0(proj_path,"GIS/Derived rasters/Distance/dist_woodland_1995_1ha.tif")))
-    
-    # Read climate zones raster
-    clim_zone <- rast(paste0(proj_path,"GIS/Climate zones/clim_zone_1ha.tif"))
-    
-    # Read percentage land cover raster stacks
-    landcov_2017 <- c(rast(paste0(proj_path,"GIS/Derived rasters/Land cover/cover_2017_1ha/Shola_Forest_cover.tif")),
-                      rast(paste0(proj_path,"GIS/Derived rasters/Land cover/cover_2017_1ha/Timber_Plantations_cover.tif")),
-                      rast(paste0(proj_path,"GIS/Derived rasters/Land cover/cover_2017_1ha/Woodland_cover.tif")))
-    landcov_1995 <- c(rast(paste0(proj_path,"GIS/Derived rasters/Land cover/cover_1995_1ha/Shola_Forest_cover.tif")),
-                      rast(paste0(proj_path,"GIS/Derived rasters/Land cover/cover_1995_1ha/Timber_Plantations_cover.tif")),
-                      rast(paste0(proj_path,"GIS/Derived rasters/Land cover/cover_1995_1ha/Woodland_cover.tif")))
-    
-    # Read categorical land cover rasters
-    landcov_2017_cat <- rast(paste0(proj_path,"GIS/Land cover/2017D/2017D_rast_1ha.tif"))
-    landcov_1995_cat <- rast(paste0(proj_path,"GIS/Land cover/1995D/1995D_rast_1ha.tif"))
-  }
+  # Read canopy height rasters
+  ch_2000 <- rast(paste0(proj_path,"GIS/Canopy/Canopy height/2000/canopy height_2000_1ha.tif"))
+  ch_2020 <- rast(paste0(proj_path,"GIS/Canopy/Canopy height/2020/canopy height_2020_1ha.tif"))
   
-  # Clip and mask variables for grassland species
-  if (region == "nilpa1400_25ha") {
-    
-    # Read canopy height rasters
-    ch_2000 <- rast(paste0(proj_path,"GIS/Canopy/Canopy height/2000/canopy height_2000_25ha.tif"))
-    ch_2020 <- rast(paste0(proj_path,"GIS/Canopy/Canopy height/2020/canopy height_2020_25ha.tif"))
-    
-    # Read stack of topographic variable layers
-    files_topo <- list.files(paste0(proj_path,"GIS/Derived rasters/Topo variables/25ha"),
-                             pattern = ".tif$",
-                             full.names = TRUE)
-    topo <- rast(files_topo)
-    
-    # Read distance to grassland layers
-    dist_2017 <- rast(paste0(proj_path,"GIS/Derived rasters/Distance/dist_grassland_2017_25ha.tif"))
-    dist_1995 <- rast(paste0(proj_path,"GIS/Derived rasters/Distance/dist_grassland_1995_25ha.tif"))
-    
-    # Read climate zones raster
-    clim_zone <- rast(paste0(proj_path,"GIS/Climate zones/clim_zone_25ha.tif"))
-    
-    # Read grassland cover raster layers
-    landcov_2017 <- rast(paste0(proj_path,"GIS/Derived rasters/Land cover/cover_2017_25ha/Shola_Grassland_cover.tif"))
-    landcov_1995 <- rast(paste0(proj_path,"GIS/Derived rasters/Land cover/cover_1995_25ha/Shola_Grassland_cover.tif"))
-    
-    # Read categorical land cover rasters
-    landcov_2017_cat <- rast(paste0(proj_path,"GIS/Land cover/2017D/2017D_rast_25ha.tif"))
-    landcov_1995_cat <- rast(paste0(proj_path,"GIS/Land cover/1995D/1995D_rast_25ha.tif"))
-  }
+  # Read stack of topographic variable layers
+  files_topo <- list.files(paste0(proj_path,"GIS/Derived rasters/Topo variables/1ha"),
+                           pattern = ".tif$",
+                           full.names = TRUE)
+  topo <- rast(files_topo)
+  
+  # Read stack of distance variable layers
+  dist_2017 <- c(rast(paste0(proj_path,"GIS/Derived rasters/Distance/dist_settlements_2017_1ha.tif")),
+                 rast(paste0(proj_path,"GIS/Derived rasters/Distance/dist_shola_2017_1ha.tif")),
+                 rast(paste0(proj_path,"GIS/Derived rasters/Distance/dist_woodland_2017_1ha.tif")),
+                 rast(paste0(proj_path,"GIS/Derived rasters/Distance/dist_grassland_2017_1ha.tif")))
+  
+  dist_1995 <- c(rast(paste0(proj_path,"GIS/Derived rasters/Distance/dist_settlements_1995_1ha.tif")),
+                 rast(paste0(proj_path,"GIS/Derived rasters/Distance/dist_shola_1995_1ha.tif")),
+                 rast(paste0(proj_path,"GIS/Derived rasters/Distance/dist_woodland_1995_1ha.tif")),
+                 rast(paste0(proj_path,"GIS/Derived rasters/Distance/dist_grassland_1995_1ha.tif")))
+  
+  # Read climate zones raster
+  clim_zone <- rast(paste0(proj_path,"GIS/Climate zones/clim_zone_1ha.tif"))
+  
+  # Read percentage land cover raster stacks
+  landcov_2017 <- c(rast(paste0(proj_path,"GIS/Derived rasters/Land cover/cover_2017_1ha/Shola_Forest_cover.tif")),
+                    rast(paste0(proj_path,"GIS/Derived rasters/Land cover/cover_2017_1ha/Timber_Plantations_cover.tif")),
+                    rast(paste0(proj_path,"GIS/Derived rasters/Land cover/cover_2017_1ha/Woodland_cover.tif")),
+                    rast(paste0(proj_path,"GIS/Derived rasters/Land cover/cover_2017_1ha/Montane_Grassland_cover.tif")))
+  landcov_1995 <- c(rast(paste0(proj_path,"GIS/Derived rasters/Land cover/cover_1995_1ha/Shola_Forest_cover.tif")),
+                    rast(paste0(proj_path,"GIS/Derived rasters/Land cover/cover_1995_1ha/Timber_Plantations_cover.tif")),
+                    rast(paste0(proj_path,"GIS/Derived rasters/Land cover/cover_1995_1ha/Woodland_cover.tif")),
+                    rast(paste0(proj_path,"GIS/Derived rasters/Land cover/cover_1995_1ha/Montane_Grassland_cover.tif")))
+  
+  # Read categorical land cover rasters
+  landcov_2017_cat <- rast(paste0(proj_path,"GIS/Land cover/2017D/2017D_rast_1ha.tif"))
+  landcov_1995_cat <- rast(paste0(proj_path,"GIS/Land cover/1995D/1995D_rast_1ha.tif"))
   
   # Reproject shapefile to project CRS
   shp <- project(shp,y = crs(clim_zone))
@@ -198,25 +166,46 @@ for (region in c("nil1400_1ha","pa1400_1ha","nilpa1400_25ha","nilpa1400_1ha")) {
                                 filename = paste0(proj_path,"SDM/Input/",region,"/predictors_all/landcov_1995.tif"),
                                 overwrite = TRUE)
   
-  # Create raster stacks for past and present
-  predictors_present <- c(ch_2020_clip,
-                          topo_clip,
-                          dist_2017_clip,
-                          clim_zone_clip,
-                          landcov_2017_clip)
+  # Create raster stacks for past and present for forest and grassland species and save
+  predictors_present_f <- c(ch_2020_clip,
+                            subset(topo_clip,"elevation",negate = TRUE),
+                            subset(dist_2017_clip,"dist_grassland",negate = TRUE),
+                            clim_zone_clip,
+                            subset(landcov_2017_clip,"Montane_Grassland_cover",negate = TRUE))
   
-  predictors_past <- c(ch_2000_clip,
-                       topo_clip,
-                       dist_1995_clip,
-                       clim_zone_clip,
-                       landcov_1995_clip)
+  predictors_past_f <- c(ch_2000_clip,
+                         subset(topo_clip,"elevation",negate = TRUE),
+                         subset(dist_1995_clip,"dist_grassland",negate = TRUE),
+                         clim_zone_clip,
+                         subset(landcov_1995_clip,"Montane_Grassland_cover",negate = TRUE))
   
-  # Save raster stacks and write to TIF files
-  writeRaster(predictors_present,
-              filename = paste0(proj_path,"SDM/Input/",region,"/predictors_present.tif"),
+  writeRaster(predictors_present_f,
+              filename = paste0(proj_path,"SDM/Input/",region,"/predictors_present_forest.tif"),
               overwrite = TRUE)
   
-  writeRaster(predictors_past,
-              filename = paste0(proj_path,"SDM/Input/",region,"/predictors_past.tif"),
+  writeRaster(predictors_past_f,
+              filename = paste0(proj_path,"SDM/Input/",region,"/predictors_past_forest.tif"),
               overwrite = TRUE)
+  
+  if (region == "nilpa1400_1ha") {
+    predictors_present_g <- c(ch_2020_clip,
+                              topo_clip,
+                              dist_2017_clip[["dist_grassland"]],
+                              clim_zone_clip,
+                              landcov_2017_clip[["Montane_Grassland_cover"]])
+    
+    predictors_past_g <- c(ch_2000_clip,
+                           topo_clip,
+                           dist_1995_clip[["dist_grassland"]],
+                           clim_zone_clip,
+                           landcov_1995_clip[["Montane_Grassland_cover"]])
+    
+    writeRaster(predictors_present_g,
+                filename = paste0(proj_path,"SDM/Input/",region,"/predictors_present_grassland.tif"),
+                overwrite = TRUE)
+    
+    writeRaster(predictors_past_g,
+                filename = paste0(proj_path,"SDM/Input/",region,"/predictors_past_grassland.tif"),
+                overwrite = TRUE)
+  }
 }
