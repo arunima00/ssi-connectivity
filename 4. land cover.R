@@ -21,7 +21,7 @@ lc_1995 <- subst(lc_1995,from = 0,to = NA,raw = TRUE)
 
 # Name land cover categories
 lc_df <- data.frame(value = 1:8,
-                    class = c("Shola Grassland",
+                    class = c("Montane Grassland",
                               "Shola Forest",
                               "Timber Plantations",
                               "Tea Plantations",
@@ -47,10 +47,7 @@ writeRaster(lc_1995,
 # Read reference 1ha resolution raster
 rast_1ha <- rast(paste0(proj_path,"occupancy data/1500 1ha grids/1ha grids.tif"))
 
-# Read reference 25ha raster
-clim_zone <- rast(paste0(proj_path,"GIS/Climate zones/clim_zone_25ha.tif"))
-
-# Project land cover rasters to 1ha and 25ha resolutions and write to TIF files
+# Project land cover rasters to 1ha resolution and write to TIF files
 lc_2017_1ha <- project(x = lc_2017,
                        y = rast_1ha,
                        method = "near",
@@ -61,17 +58,6 @@ lc_1995_1ha <- project(x = lc_1995,
                        method = "near",
                        filename = paste0(proj_path,"GIS/Land cover/1995D/1995D_rast_1ha.tif"),
                        overwrite = TRUE)
-
-lc_2017_25ha <- project(x = lc_2017,
-                        y = clim_zone,
-                        method = "near",
-                        filename = paste0(proj_path,"GIS/Land cover/2017D/2017D_rast_25ha.tif"),
-                        overwrite = TRUE)
-lc_1995_25ha <- project(x = lc_1995,
-                        y = clim_zone,
-                        method = "near",
-                        filename = paste0(proj_path,"GIS/Land cover/1995D/1995D_rast_25ha.tif"),
-                        overwrite = TRUE)
 
 # Polygonise rasters
 lc_2017_vect <- as.polygons(lc_2017,round = FALSE)
@@ -104,73 +90,55 @@ writeVector(lc_1995_vect,
 # # Read land cover rasters and polygonised land cover
 # lc_2017_1ha <- rast(paste0(proj_path,"GIS/Land cover/2017D/2017D_rast_1ha.tif"))
 # lc_1995_1ha <- rast(paste0(proj_path,"GIS/Land cover/1995D/1995D_rast_1ha.tif"))
-# lc_2017_25ha <- rast(paste0(proj_path,"GIS/Land cover/2017D/2017D_rast_25ha.tif"))
-# lc_1995_25ha <- rast(paste0(proj_path,"GIS/Land cover/1995D/1995D_rast_25ha.tif"))
 # lc_2017_vect <- vect(paste0(proj_path,"GIS/Land cover/2017D/2017D vectorised/2017D.shp"))
 # lc_1995_vect <- vect(paste0(proj_path,"GIS/Land cover/1995D/1995D vectorised/1995D.shp"))
 
 # Create loop to derive percentage cover for each land cover class with all rasters
-for (res in c("1ha","25ha")) {
-  for (year in c("1995","2017")) {
-    if (year == "1995") {
-      
-      lc_vect <- lc_1995_vect
-      
-      if (res == "1ha") {
-        lc_grid <- lc_1995_1ha
-      }
-      if (res == "25ha") {
-        lc_grid <- lc_1995_25ha
-      }
-    }
-    
-    if (year == "2017") {
-      
-      lc_vect <- lc_2017_vect
-      
-      if (res == "1ha") {
-        lc_grid <- lc_2017_1ha
-      }
-      if (res == "25ha") {
-        lc_grid <- lc_2017_25ha
-      }
-    }
-    
-    # Get fraction cover for each land cover class
-    cover <- rasterize(lc_vect,
-                       lc_grid,
-                       field = "landcov",
-                       fun = "mean",
-                       cover = TRUE,
-                       update = TRUE,
-                       by = "landcov")
-    
-    # Rename layers
-    names(cover) <- lapply(names(cover),function(x) {
-      x <- gsub(" ","_",x)
-      x <- paste0(x,"_cover")
-      x
-    })
-    
-    # Convert to percentage
-    cover <- cover * 100
-    
-    # Set background pixels to 0
-    cover[is.na(cover)] <- 0
-    
-    # Write rasters to TIF files
-    output_paths <- c()
-    
-    if (! dir.exists(paste0(proj_path,"GIS/Derived rasters/Land cover/cover_",year,"_",res))) {
-      dir.create(paste0(proj_path,"GIS/Derived rasters/Land cover/cover_",year,"_",res),recursive = TRUE)
-    }
-    
-    for (i in names(cover)){
-      output_paths <- c(output_paths,paste0(proj_path,"GIS/Derived rasters/Land cover/cover_",year,"_",res,"/",i,".tif"))
-    }
-    
-    writeRaster(cover,filename = output_paths,overwrite = TRUE)
+for (year in c("1995","2017")) {
+  if (year == "1995") {
+    lc_vect <- lc_1995_vect
+    lc_grid <- lc_1995_1ha
   }
+  
+  if (year == "2017") {
+    lc_vect <- lc_2017_vect
+    lc_grid <- lc_2017_1ha
+  }
+  
+  # Get fraction cover for each land cover class
+  cover <- rasterize(lc_vect,
+                     lc_grid,
+                     field = "landcov",
+                     fun = "mean",
+                     cover = TRUE,
+                     update = TRUE,
+                     by = "landcov")
+  
+  # Rename layers
+  names(cover) <- lapply(names(cover),function(x) {
+    x <- gsub(" ","_",x)
+    x <- paste0(x,"_cover")
+    x
+  })
+  
+  # Convert to percentage
+  cover <- cover * 100
+  
+  # Set background pixels to 0
+  cover[is.na(cover)] <- 0
+  
+  # Write rasters to TIF files
+  output_paths <- c()
+  
+  if (! dir.exists(paste0(proj_path,"GIS/Derived rasters/Land cover/cover_",year,"_1ha"))) {
+    dir.create(paste0(proj_path,"GIS/Derived rasters/Land cover/cover_",year,"_1ha"),recursive = TRUE)
+  }
+  
+  for (i in names(cover)){
+    output_paths <- c(output_paths,paste0(proj_path,"GIS/Derived rasters/Land cover/cover_",year,"_1ha/",i,".tif"))
+  }
+  
+  writeRaster(cover,filename = output_paths,overwrite = TRUE)
 }
 
 # Extract Shola Forest and Timber plantation polygons
