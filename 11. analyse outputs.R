@@ -882,11 +882,12 @@ ggdraw() +
   draw_plot_label(c("(A)", "(B)"), c(0, 0), c(1, 0.4), size = 11)
 
 # Save final plot
-ggsave(filename = paste0(proj_path,"Presentation/Paper figures/lc_change.png"),
+ggsave(filename = paste0(proj_path,"Presentation/Paper figures/lc_change.tiff"),
        width = 6000,
        height = 3500,
        units = "px",
-       dpi = 600)
+       dpi = 600,
+       bg = "white")
 
 # Load filenames for all rasters for change in CCF
 files <- list.files(path = paste0(proj_path,"Omniscape/Output/Change/Difference_cum_currmap"),
