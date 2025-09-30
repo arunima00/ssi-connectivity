@@ -290,7 +290,7 @@ for (spec in spec_list) {
                        ntree = 1000,
                        mtry = mtry,
                        sampsize = smpsize,
-                       nodesize = mtry,
+                       nodesize = nodesize,
                        replace = TRUE,
                        importance = TRUE)
   } 
